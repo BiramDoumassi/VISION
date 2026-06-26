@@ -1,0 +1,52 @@
+{
+  "name": "Pipeline",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "error",
+        "completed"
+      ]
+    },
+    "records_processed": {
+      "type": "number"
+    },
+    "records_failed": {
+      "type": "number"
+    },
+    "last_run": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "schedule": {
+      "type": "string"
+    },
+    "pipeline_type": {
+      "type": "string",
+      "enum": [
+        "ingestion",
+        "transformation",
+        "export",
+        "sync"
+      ]
+    },
+    "health_score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

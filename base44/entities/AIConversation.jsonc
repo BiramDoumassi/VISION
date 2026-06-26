@@ -1,0 +1,33 @@
+{
+  "name": "AIConversation",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "query",
+        "assistant",
+        "analysis",
+        "search"
+      ]
+    },
+    "context": {
+      "type": "string"
+    },
+    "tokens_used": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

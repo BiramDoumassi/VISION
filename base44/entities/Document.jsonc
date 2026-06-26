@@ -1,0 +1,77 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Document name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "image",
+        "video",
+        "audio",
+        "spreadsheet",
+        "email",
+        "contract",
+        "invoice",
+        "report",
+        "other"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "Data source connector"
+    },
+    "size_bytes": {
+      "type": "number"
+    },
+    "category": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "department": {
+      "type": "string"
+    },
+    "ai_summary": {
+      "type": "string"
+    },
+    "quality_score": {
+      "type": "number"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "indexed",
+        "processing",
+        "error",
+        "pending"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

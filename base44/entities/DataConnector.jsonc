@@ -1,0 +1,55 @@
+{
+  "name": "DataConnector",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "connector_type": {
+      "type": "string",
+      "enum": [
+        "google_drive",
+        "dropbox",
+        "onedrive",
+        "gmail",
+        "outlook",
+        "slack",
+        "salesforce",
+        "hubspot",
+        "postgresql",
+        "mysql",
+        "mongodb",
+        "stripe",
+        "sap",
+        "aws_s3",
+        "api",
+        "iot",
+        "csv",
+        "whatsapp"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "connected",
+        "disconnected",
+        "error",
+        "syncing"
+      ]
+    },
+    "records_synced": {
+      "type": "number"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "config": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "name",
+    "connector_type"
+  ]
+}

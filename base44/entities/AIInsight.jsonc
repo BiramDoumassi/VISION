@@ -1,0 +1,50 @@
+{
+  "name": "AIInsight",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "insight_type": {
+      "type": "string",
+      "enum": [
+        "anomaly",
+        "trend",
+        "recommendation",
+        "alert",
+        "summary"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ]
+    },
+    "module": {
+      "type": "string"
+    },
+    "data_source": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "is_resolved": {
+      "type": "boolean",
+      "default": false
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "title",
+    "insight_type"
+  ]
+}

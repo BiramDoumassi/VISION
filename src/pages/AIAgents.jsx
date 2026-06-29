@@ -24,7 +24,7 @@ const AGENT_CONFIGS = [
 ];
 
 // Use the main VISION agent as fallback when specialized agents aren't configured
-const MAIN_AGENT = import.meta.env.VITE_BASE44_AGENT_NAME || 'VISION';
+const MAIN_AGENT = import.meta.env.VITE_BASE44_AGENT_NAME || 'vision_assistant';
 
 const STATUS = {
   active:  { label: 'Active',  color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-500' },

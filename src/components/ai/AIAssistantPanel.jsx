@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
-const AGENT_NAME = import.meta.env.VITE_BASE44_AGENT_NAME || 'VISION';
+const AGENT_NAME = import.meta.env.VITE_BASE44_AGENT_NAME || 'vision_assistant';
 
 const WELCOME_CONTENT = 'Bonjour ! Je suis votre assistant DOUMASSI AI. Je peux vous aider à interroger vos données, analyser des insights et automatiser des workflows. Comment puis-je vous aider ?';
 

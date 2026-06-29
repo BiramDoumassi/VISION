@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
 // Name of the agent configured in your base44 dashboard
-const AGENT_NAME = import.meta.env.VITE_BASE44_AGENT_NAME || 'VISION';
+const AGENT_NAME = import.meta.env.VITE_BASE44_AGENT_NAME || 'vision_assistant';
 
 const WELCOME = {
   id: 'welcome',

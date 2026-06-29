@@ -1,52 +1,78 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Mic, Paperclip } from 'lucide-react';
 import doumassiLogo from "@/assets/Doumassi_AI_logo.png";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { base44 } from '@/api/base44Client';
 
-const fallbackResponse = (input) => {
-  const q = input.toLowerCase();
-  if (q.includes('sales') || q.includes('ventes') || q.includes('revenue'))
-    return "J'ai analysé vos données de ventes. Croissance de +23% détectée, avec l'EMEA comme meilleure région. Voulez-vous un rapport complet ?";
-  if (q.includes('client') || q.includes('customer') || q.includes('churn'))
-    return "Taux de rétention : 91.3%. 12% des clients montrent un risque de churn — je recommande une action proactive.";
-  if (q.includes('sécurité') || q.includes('security'))
-    return "Score de sécurité : 94.7/100. Aucune vulnérabilité critique. 3 patches en attente de priorité moyenne.";
-  if (q.includes('pipeline') || q.includes('data') || q.includes('données'))
-    return "Vos pipelines fonctionnent à 99.2% de disponibilité. Le pipeline MongoDB montre une latence élevée.";
-  return "J'ai analysé votre demande. 3 datasets pertinents trouvés, 94% de pertinence. Voulez-vous approfondir ?";
-};
+const AGENT_NAME = import.meta.env.VITE_BASE44_AGENT_NAME || 'VISION';
+
+const WELCOME_CONTENT = 'Bonjour ! Je suis votre assistant DOUMASSI AI. Je peux vous aider à interroger vos données, analyser des insights et automatiser des workflows. Comment puis-je vous aider ?';
 
 export default function AIAssistantPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Bonjour ! Je suis votre assistant DOUMASSI AI. Je peux vous aider à interroger vos données, analyser des insights et automatiser des workflows. Comment puis-je vous aider ?' }
-  ]);
+  const [messages, setMessages] = useState([{ id: 'welcome', role: 'assistant', content: WELCOME_CONTENT }]);
+  const [conv, setConv] = useState(null);
+  const convInitialized = useRef(false);
+  const unsubRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen || convInitialized.current) return;
+    convInitialized.current = true;
+
+    base44.agents.createConversation({ agent_name: AGENT_NAME })
+      .then(conversation => {
+        setConv(conversation);
+        unsubRef.current = base44.agents.subscribeToConversation(
+          conversation.id,
+          updatedConv => {
+            const msgs = updatedConv.messages
+              .filter(m => !m.hidden && (m.role === 'user' || m.role === 'assistant'))
+              .map(m => ({ id: m.id, role: m.role, content: typeof m.content === 'string' ? m.content : '' }))
+              .filter(m => m.content.trim());
+
+            setMessages([{ id: 'welcome', role: 'assistant', content: WELCOME_CONTENT }, ...msgs]);
+
+            const last = msgs[msgs.length - 1];
+            if (last?.role === 'assistant') setIsLoading(false);
+          }
+        );
+      })
+      .catch(() => {});
+
+    return () => unsubRef.current?.();
+  }, [isOpen]);
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
-    const userMsg = message;
-    const newMessages = [...messages, { role: 'user', content: userMsg }];
-    setMessages(newMessages);
+    const text = message;
     setMessage('');
     setIsLoading(true);
 
+    setMessages(prev => [...prev, { id: 'pending', role: 'user', content: text }]);
+
+    if (!conv) {
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev.filter(m => m.id !== 'pending'),
+          { id: 'err', role: 'assistant', content: "L'agent IA n'est pas encore configuré. Crée un agent nommé VISION dans ton dashboard base44." }
+        ]);
+        setIsLoading(false);
+      }, 400);
+      return;
+    }
+
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-      if (!res.ok) throw new Error('API error');
-      const data = await res.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+      await base44.agents.addMessage(conv, { role: 'user', content: text });
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: fallbackResponse(userMsg) }]);
-    } finally {
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== 'pending'),
+        { id: 'err', role: 'assistant', content: 'Une erreur est survenue. Veuillez réessayer.' }
+      ]);
       setIsLoading(false);
     }
   };
@@ -89,7 +115,7 @@ export default function AIAssistantPanel() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg, i) => (
                 <motion.div
-                  key={i}
+                  key={msg.id || i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -127,12 +153,12 @@ export default function AIAssistantPanel() {
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask anything..."
                   className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm"
                 />
                 <button
-                  onClick={() => toast.info('Microphone non disponible dans cette démo')}
+                  onClick={() => toast.info('Microphone non disponible')}
                   className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors flex-shrink-0"
                 >
                   <Mic className="w-4 h-4" />

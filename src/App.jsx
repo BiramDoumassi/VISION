@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import LoginPage from '@/pages/LoginPage';
 
 // Layout
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -36,7 +37,7 @@ import OpenDataEngine from '@/pages/OpenDataEngine';
 import EarthView from '@/pages/EarthView';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, authChecked } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -55,10 +56,14 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
+  }
+
+  // Show login page when auth check is done and user is not authenticated
+  if (authChecked && !isAuthenticated) {
+    return <LoginPage />;
   }
 
   // Render the main app

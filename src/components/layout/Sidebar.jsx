@@ -22,8 +22,10 @@ import {
   FileBarChart,
   BookOpen,
   Globe,
-  Earth
+  Earth,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const menuItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Command Center', section: 'main' },
@@ -58,6 +60,7 @@ const sections = {
 export default function Sidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user, logout } = useAuth();
 
   const groupedItems = menuItems.reduce((acc, item) => {
     if (!acc[item.section]) acc[item.section] = [];
@@ -112,7 +115,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom section */}
-      <div className="border-t border-white/5 p-3">
+      <div className="border-t border-white/5 p-3 space-y-0.5">
         <Link to="/settings" className="sidebar-item">
           <Settings className="w-4 h-4" />
           <span>Settings</span>
@@ -121,6 +124,25 @@ export default function Sidebar() {
           <HelpCircle className="w-4 h-4" />
           <span>Help & Support</span>
         </Link>
+
+        {/* User + logout */}
+        {user && (
+          <div className="mt-2 pt-2 border-t border-white/5">
+            <div className="flex items-center gap-2 px-3 py-2 mb-1">
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-[10px] text-white/60 font-medium">
+                {(user.email || user.id || '?')[0].toUpperCase()}
+              </div>
+              <span className="text-xs text-white/40 truncate flex-1">{user.email || user.id}</span>
+            </div>
+            <button
+              onClick={() => logout(true)}
+              className="sidebar-item w-full text-left text-red-400/70 hover:text-red-400 hover:bg-red-500/5"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign out</span>
+            </button>
+          </div>
+        )}
       </div>
     </motion.aside>
   );

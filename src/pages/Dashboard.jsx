@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -5,43 +6,63 @@ import ActivityChart from '@/components/dashboard/ActivityChart';
 import AIInsightsPanel from '@/components/dashboard/AIInsightsPanel';
 import ConnectorStatus from '@/components/dashboard/ConnectorStatus';
 import SystemHealth from '@/components/dashboard/SystemHealth';
-import { 
-  Database, FileText, Search, Sparkles, 
-  AlertTriangle, Activity, Shield, Zap 
+import {
+  Database, FileText, Search, Sparkles,
+  Activity, Shield, Zap
 } from 'lucide-react';
-
-const metrics = [
-  { title: 'Total Documents', value: '248,392', change: '+12.5%', changeType: 'positive', icon: FileText },
-  { title: 'AI Queries Today', value: '14,821', change: '+23.8%', changeType: 'positive', icon: Search },
-  { title: 'Active Pipelines', value: '89', change: '+4', changeType: 'positive', icon: Activity },
-  { title: 'AI Insights', value: '3,421', change: '+156', changeType: 'positive', icon: Sparkles },
-  { title: 'Data Quality', value: '98.7%', change: '+0.3%', changeType: 'positive', icon: Zap },
-  { title: 'Security Alerts', value: '3', change: '-2', changeType: 'positive', icon: Shield }
-];
+import { Document, Pipeline, AIInsight } from '@/api/entities';
 
 export default function Dashboard() {
+  const [counts, setCounts] = useState({
+    documents: '…',
+    pipelines: '…',
+    insights: '…',
+    alerts: '…',
+  });
+
+  useEffect(() => {
+    Promise.allSettled([
+      Document.list('-created_date', 1000),
+      Pipeline.list('-created_date', 200),
+      AIInsight.list('-created_date', 200),
+    ]).then(([docs, pipes, insights]) => {
+      const docList = docs.status === 'fulfilled' ? docs.value : [];
+      const pipeList = pipes.status === 'fulfilled' ? pipes.value : [];
+      const insightList = insights.status === 'fulfilled' ? insights.value : [];
+
+      setCounts({
+        documents: docList.length.toLocaleString(),
+        pipelines: pipeList.filter(p => p.status === 'active').length.toString(),
+        insights: insightList.length.toLocaleString(),
+        alerts: insightList.filter(i => !i.is_resolved && (i.severity === 'critical' || i.severity === 'high')).length.toString(),
+      });
+    });
+  }, []);
+
+  const metrics = [
+    { title: 'Total Documents', value: counts.documents, change: '+12.5%', changeType: 'positive', icon: FileText },
+    { title: 'AI Queries Today', value: '14,821', change: '+23.8%', changeType: 'positive', icon: Search },
+    { title: 'Active Pipelines', value: counts.pipelines, change: '+4', changeType: 'positive', icon: Activity },
+    { title: 'AI Insights', value: counts.insights, change: '+156', changeType: 'positive', icon: Sparkles },
+    { title: 'Data Quality', value: '98.7%', change: '+0.3%', changeType: 'positive', icon: Zap },
+    { title: 'Security Alerts', value: counts.alerts, change: '-2', changeType: 'positive', icon: Shield }
+  ];
+
   return (
     <div className="min-h-screen bg-[#050505]">
-      <Header 
-        title="Command Center" 
-        subtitle="Enterprise AI Data Platform" 
-      />
-      
+      <Header title="Command Center" subtitle="Enterprise AI Data Platform" />
+
       <div className="p-6">
-        {/* Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {metrics.map((metric, i) => (
             <MetricCard key={metric.title} {...metric} delay={i * 0.05} />
           ))}
         </div>
 
-        {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Charts */}
           <div className="lg:col-span-2 space-y-6">
             <ActivityChart />
-            
-            {/* Quick Actions */}
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -68,7 +89,6 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* Right Column - Panels */}
           <div className="space-y-6">
             <AIInsightsPanel />
             <ConnectorStatus />

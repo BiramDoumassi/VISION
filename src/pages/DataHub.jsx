@@ -1,17 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import {
   Upload, Search, Filter, Grid, List, FileText, Image,
   Video, File, MoreVertical, Download, Trash2, Tag,
-  Clock, Shield, Sparkles, FolderOpen, Plus
+  Clock, Shield, Sparkles, FolderOpen, Plus, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { Document } from '@/api/entities';
 
-const documents = [
+const fallbackDocuments = [
   { id: 1, name: 'Q4 Financial Report 2025.pdf', type: 'pdf', size: '2.4 MB', category: 'Finance', sensitivity: 'confidential', date: '2 hours ago', aiSummary: 'Annual financial overview with revenue growth of 34%' },
   { id: 2, name: 'Customer Analytics Dashboard.xlsx', type: 'spreadsheet', size: '1.8 MB', category: 'Analytics', sensitivity: 'internal', date: '5 hours ago', aiSummary: 'Customer segmentation data with 45K records' },
   { id: 3, name: 'Product Demo Video.mp4', type: 'video', size: '124 MB', category: 'Marketing', sensitivity: 'public', date: '1 day ago', aiSummary: 'New feature demonstration for enterprise clients' },
@@ -20,7 +21,7 @@ const documents = [
   { id: 6, name: 'Brand Assets Pack.zip', type: 'image', size: '234 MB', category: 'Design', sensitivity: 'public', date: '1 week ago', aiSummary: 'Company logo variations and brand guidelines' },
 ];
 
-const categories = ['All', 'Finance', 'Analytics', 'Marketing', 'HR', 'IT', 'Design'];
+const categories = ['All', 'Finance', 'Analytics', 'Marketing', 'HR', 'IT', 'Design', 'General'];
 
 const typeIcons = {
   pdf: FileText,
@@ -38,25 +39,87 @@ const sensitivityColors = {
   restricted: 'bg-red-500/10 text-red-400 border-red-500/20'
 };
 
+const extToType = {
+  pdf: 'pdf', xlsx: 'spreadsheet', xls: 'spreadsheet', csv: 'spreadsheet',
+  mp4: 'video', mov: 'video', avi: 'video',
+  jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image',
+  doc: 'contract', docx: 'contract',
+};
+
+function formatBytes(bytes) {
+  if (!bytes) return '-';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function mapEntity(d) {
+  return {
+    id: d.id,
+    name: d.name || 'Untitled',
+    type: d.type || 'other',
+    size: formatBytes(d.size_bytes),
+    category: d.category || 'General',
+    sensitivity: d.sensitivity || 'internal',
+    date: d.created_date ? new Date(d.created_date).toLocaleDateString() : 'Unknown',
+    aiSummary: d.ai_summary || 'No AI summary yet'
+  };
+}
+
 export default function DataHub() {
   const [view, setView] = useState('grid');
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [openMenu, setOpenMenu] = useState(null);
-  const [docs, setDocs] = useState(documents);
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
 
-  const handleUpload = (e) => {
+  useEffect(() => {
+    Document.list('-created_date', 100)
+      .then(data => {
+        setDocs(data && data.length > 0 ? data.map(mapEntity) : fallbackDocuments);
+      })
+      .catch(() => setDocs(fallbackDocuments))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleUpload = async (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      toast.success(`${files.length} fichier${files.length > 1 ? 's importés' : ' importé'} avec succès`);
-      e.target.value = '';
+    if (!files.length) return;
+    e.target.value = '';
+
+    for (const file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const type = extToType[ext] || 'other';
+      try {
+        const entity = await Document.create({
+          name: file.name,
+          type,
+          size_bytes: file.size,
+          category: 'General',
+          sensitivity: 'internal',
+          status: 'active',
+        });
+        setDocs(prev => [mapEntity(entity), ...prev]);
+      } catch {
+        setDocs(prev => [{
+          id: `local-${Date.now()}-${file.name}`,
+          name: file.name, type, size: formatBytes(file.size),
+          category: 'General', sensitivity: 'internal',
+          date: 'Just now', aiSummary: 'Processing...'
+        }, ...prev]);
+      }
     }
+    toast.success(`${files.length} fichier${files.length > 1 ? 's importés' : ' importé'} avec succès`);
   };
 
-  const handleDelete = (id) => {
-    setDocs(prev => prev.filter(d => d.id !== id));
+  const handleDelete = async (id) => {
     setOpenMenu(null);
+    if (!String(id).startsWith('local-')) {
+      try { await Document.delete(id); } catch {}
+    }
+    setDocs(prev => prev.filter(d => d.id !== id));
     toast.success('Fichier supprimé');
   };
 
@@ -70,19 +133,16 @@ export default function DataHub() {
 
   return (
     <div className="min-h-screen bg-[#050505]">
-      <Header 
-        title="Universal Data Hub" 
-        subtitle="Centralized data management" 
-      />
-      
+      <Header title="Universal Data Hub" subtitle="Centralized data management" />
+
       <div className="p-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Total Documents', value: '248,392', icon: FileText },
-            { label: 'Contracts Detected', value: '1,248', icon: Shield },
-            { label: 'Duplicates Removed', value: '421', icon: Trash2 },
-            { label: 'AI Categorized', value: '98.2%', icon: Sparkles }
+            { label: 'Total Documents', value: loading ? '…' : docs.length.toLocaleString(), icon: FileText },
+            { label: 'Contracts Detected', value: loading ? '…' : docs.filter(d => d.type === 'contract').length.toString(), icon: Shield },
+            { label: 'Duplicates Removed', value: '0', icon: Trash2 },
+            { label: 'AI Categorized', value: loading ? '…' : docs.length > 0 ? '100%' : '0%', icon: Sparkles }
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -106,26 +166,24 @@ export default function DataHub() {
           className="glass rounded-xl p-4 mb-6"
         >
           <div className="flex flex-wrap items-center gap-4">
-            {/* Search */}
             <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
               <Input
-                placeholder="Search documents with AI..."
+                placeholder="Search documents..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30"
               />
             </div>
 
-            {/* Categories */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    activeCategory === cat 
-                      ? 'bg-white text-black' 
+                    activeCategory === cat
+                      ? 'bg-white text-black'
                       : 'text-white/50 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -134,7 +192,6 @@ export default function DataHub() {
               ))}
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="text-white/50 hover:text-white hover:bg-white/5">
                 <Filter className="w-4 h-4" />
@@ -156,99 +213,100 @@ export default function DataHub() {
           </div>
         </motion.div>
 
-        {/* Click outside to close menu */}
-        {openMenu && (
-          <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
+        {openMenu && <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
+          </div>
+        ) : (
+          <div className={view === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+            {visibleDocs.map((doc, i) => {
+              const Icon = typeIcons[doc.type] || File;
+              return (
+                <motion.div
+                  key={doc.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.05 }}
+                  className="glass rounded-xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                      <Icon className="w-5 h-5 text-white/60" />
+                    </div>
+                    <div className="relative z-50">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === doc.id ? null : doc.id); }}
+                        className="text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {openMenu === doc.id && (
+                        <div className="absolute right-0 top-7 glass rounded-xl p-1 min-w-[150px] border border-white/10 shadow-xl">
+                          <button
+                            onClick={() => { toast.success(`Téléchargement de ${doc.name}`); setOpenMenu(null); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Télécharger
+                          </button>
+                          <button
+                            onClick={() => { toast.success('Tag appliqué'); setOpenMenu(null); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+                          >
+                            <Tag className="w-3.5 h-3.5" /> Ajouter un tag
+                          </button>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 className="text-sm font-medium text-white/90 mb-2 truncate">{doc.name}</h3>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className={`text-[10px] ${sensitivityColors[doc.sensitivity] || sensitivityColors.internal}`}>
+                      {doc.sensitivity}
+                    </Badge>
+                    <span className="text-[10px] text-white/30">{doc.size}</span>
+                  </div>
+
+                  <p className="text-xs text-white/40 mb-4 line-clamp-2">{doc.aiSummary}</p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/30">
+                      <Clock className="w-3 h-3" />
+                      {doc.date}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/30">
+                      <FolderOpen className="w-3 h-3" />
+                      {doc.category}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={() => fileInputRef.current?.click()}
+              className="glass rounded-xl p-5 border-2 border-dashed border-white/10 hover:border-white/20 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[200px] group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-white/10 transition-colors">
+                <Plus className="w-6 h-6 text-white/40" />
+              </div>
+              <p className="text-sm text-white/50">Drag & drop files</p>
+              <p className="text-xs text-white/30 mt-1">or click to upload</p>
+            </motion.div>
+          </div>
         )}
-
-        {/* Documents Grid */}
-        <div className={view === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-          {visibleDocs.map((doc, i) => {
-            const Icon = typeIcons[doc.type] || File;
-            return (
-              <motion.div
-                key={doc.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.05 }}
-                className="glass rounded-xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                    <Icon className="w-5 h-5 text-white/60" />
-                  </div>
-                  <div className="relative z-50">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === doc.id ? null : doc.id); }}
-                      className="text-white/30 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {openMenu === doc.id && (
-                      <div className="absolute right-0 top-7 glass rounded-xl p-1 min-w-[150px] border border-white/10 shadow-xl">
-                        <button
-                          onClick={() => { toast.success(`Téléchargement de ${doc.name}`); setOpenMenu(null); }}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 hover:bg-white/5 hover:text-white transition-colors"
-                        >
-                          <Download className="w-3.5 h-3.5" /> Télécharger
-                        </button>
-                        <button
-                          onClick={() => { toast.success('Tag appliqué'); setOpenMenu(null); }}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 hover:bg-white/5 hover:text-white transition-colors"
-                        >
-                          <Tag className="w-3.5 h-3.5" /> Ajouter un tag
-                        </button>
-                        <button
-                          onClick={() => handleDelete(doc.id)}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Supprimer
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <h3 className="text-sm font-medium text-white/90 mb-2 truncate">{doc.name}</h3>
-                
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge className={`text-[10px] ${sensitivityColors[doc.sensitivity]}`}>
-                    {doc.sensitivity}
-                  </Badge>
-                  <span className="text-[10px] text-white/30">{doc.size}</span>
-                </div>
-
-                <p className="text-xs text-white/40 mb-4 line-clamp-2">{doc.aiSummary}</p>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[10px] text-white/30">
-                    <Clock className="w-3 h-3" />
-                    {doc.date}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-white/30">
-                    <FolderOpen className="w-3 h-3" />
-                    {doc.category}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-
-          {/* Upload Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            onClick={() => fileInputRef.current?.click()}
-            className="glass rounded-xl p-5 border-2 border-dashed border-white/10 hover:border-white/20 transition-all cursor-pointer flex flex-col items-center justify-center min-h-[200px] group"
-          >
-            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-white/10 transition-colors">
-              <Plus className="w-6 h-6 text-white/40" />
-            </div>
-            <p className="text-sm text-white/50">Drag & drop files</p>
-            <p className="text-xs text-white/30 mt-1">or click to upload</p>
-          </motion.div>
-        </div>
       </div>
     </div>
   );

@@ -61,10 +61,10 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Show login page when auth check is done and user is not authenticated
-  if (authChecked && !isAuthenticated) {
-    return <LoginPage />;
-  }
+  // Auth login temporarily disabled — re-enable once base44 auth domain is configured
+  // if (authChecked && !isAuthenticated) {
+  //   return <LoginPage />;
+  // }
 
   // Render the main app
   return (

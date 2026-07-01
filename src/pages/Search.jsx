@@ -1,86 +1,78 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/layout/Header';
-import { 
+import {
   Search as SearchIcon, Sparkles, Clock, TrendingUp,
-  FileText, Database, Users, Building2, Tag, Filter,
-  ChevronRight, Star, ArrowRight
+  FileText, Database, Building2, Filter,
+  ChevronRight, ArrowRight, Loader2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import DoumassiLogo from '@/components/ui/DoumassiLogo';
+import { Document, AIInsight } from '@/api/entities';
 
-const recentSearches = [
-  'Q4 financial reports',
-  'Customer churn analysis',
-  'Sales by region Europe',
-  'Employee contracts 2025'
-];
+const recentSearches = ['Financial reports', 'Customer data', 'Security alerts', 'Pipeline status'];
+const trendingQueries = ['Revenue trends', 'Pipeline performance', 'Data quality', 'Security alerts'];
 
-const trendingQueries = [
-  'Revenue trends',
-  'Pipeline performance',
-  'Data quality issues',
-  'Security alerts'
-];
+const typeIcons = { document: FileText, record: Database, entity: Building2, insight: Sparkles };
 
-const searchResults = [
-  {
-    type: 'document',
-    title: 'Q4 2025 Financial Report',
-    snippet: 'Comprehensive analysis of quarterly performance with 23% revenue growth...',
-    source: 'Google Drive',
-    date: '2 days ago',
-    relevance: 98
-  },
-  {
-    type: 'record',
-    title: 'Sales Data - European Market',
-    snippet: 'Transaction records showing regional performance metrics across EU countries...',
-    source: 'Salesforce',
-    date: '1 week ago',
-    relevance: 94
-  },
-  {
-    type: 'entity',
-    title: 'Acme Corporation',
-    snippet: 'Enterprise customer with 45 associated contracts and $2.4M annual revenue...',
-    source: 'Knowledge Graph',
-    date: 'Updated today',
-    relevance: 89
-  },
-  {
-    type: 'insight',
-    title: 'Customer Retention Analysis',
-    snippet: 'AI-generated insight: 12% improvement opportunity identified in onboarding...',
-    source: 'AI Engine',
-    date: '3 hours ago',
-    relevance: 85
-  }
-];
-
-const typeIcons = {
-  document: FileText,
-  record: Database,
-  entity: Building2,
-  insight: Sparkles
-};
+function relativeDate(dateStr) {
+  if (!dateStr) return 'Unknown';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const h = Math.floor(diff / 3_600_000);
+  if (h < 1) return 'Just now';
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d} day${d > 1 ? 's' : ''} ago`;
+}
 
 export default function Search() {
   const [query, setQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const filterMap = { All: null, Documents: 'document', Data: 'record', Entities: 'entity', Insights: 'insight' };
-
   const filteredResults = activeFilter === 'All'
-    ? searchResults
-    : searchResults.filter(r => r.type === filterMap[activeFilter]);
+    ? results
+    : results.filter(r => r.type === filterMap[activeFilter]);
 
-  const handleSearch = () => {
-    if (query.trim()) {
-      setShowResults(true);
+  const handleSearch = async () => {
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    setLoading(true);
+    setShowResults(true);
+
+    try {
+      const [docs, insights] = await Promise.allSettled([
+        Document.list('-created_date', 200),
+        AIInsight.list('-created_date', 100),
+      ]);
+
+      const docResults = (docs.status === 'fulfilled' ? docs.value : [])
+        .filter(d => !q || d.name?.toLowerCase().includes(q) || d.ai_summary?.toLowerCase().includes(q) || d.category?.toLowerCase().includes(q))
+        .map(d => ({
+          type: 'document',
+          title: d.name || 'Untitled',
+          snippet: d.ai_summary || `${d.category || 'General'} · ${d.sensitivity || 'internal'}`,
+          source: d.category || 'DataHub',
+          date: relativeDate(d.created_date),
+          relevance: d.name?.toLowerCase().includes(q) ? 95 : 80,
+        }));
+
+      const insightResults = (insights.status === 'fulfilled' ? insights.value : [])
+        .filter(i => !q || i.title?.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q))
+        .map(i => ({
+          type: 'insight',
+          title: i.title || 'AI Insight',
+          snippet: i.description || 'AI-generated insight',
+          source: 'AI Engine',
+          date: relativeDate(i.created_date),
+          relevance: 75,
+        }));
+
+      setResults([...docResults, ...insightResults].sort((a, b) => b.relevance - a.relevance));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,19 +100,20 @@ export default function Search() {
 
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-            <Input
+            <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="Search documents, data, insights..."
-              className="h-14 pl-12 pr-28 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-base rounded-xl"
+              className="w-full h-14 pl-12 pr-28 bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-base rounded-xl outline-none focus:border-white/20"
             />
-            <Button 
+            <button
               onClick={handleSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white text-black hover:bg-white/90"
+              disabled={loading}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white text-black hover:bg-white/90 px-4 h-10 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              Search
-            </Button>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+            </button>
           </div>
 
           {/* Filters */}
@@ -200,48 +193,63 @@ export default function Search() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-white/50">
-                <span className="text-white">{filteredResults.length}</span> results for "{query}"
-              </p>
-              <Button variant="ghost" size="sm" className="text-white/40 text-xs">
-                <Filter className="w-3 h-3 mr-1" /> Sort by relevance
-              </Button>
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12 gap-3 text-white/30">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Searching your data…</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-white/50">
+                    <span className="text-white">{filteredResults.length}</span> result{filteredResults.length !== 1 ? 's' : ''} for "{query}"
+                  </p>
+                  <span className="flex items-center gap-1 text-xs text-white/30">
+                    <Filter className="w-3 h-3" /> Sorted by relevance
+                  </span>
+                </div>
 
-            {filteredResults.map((result, i) => {
-              const Icon = typeIcons[result.type];
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="glass rounded-xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10">
-                      <Icon className="w-5 h-5 text-white/50" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-medium text-white/90">{result.title}</h4>
-                        <Badge variant="outline" className="text-[10px] text-white/40 border-white/10">
-                          {result.relevance}% match
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-white/50 line-clamp-2 mb-2">{result.snippet}</p>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-white/30">{result.source}</span>
-                        <span className="text-[10px] text-white/20">•</span>
-                        <span className="text-[10px] text-white/30">{result.date}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50" />
+                {filteredResults.length === 0 && (
+                  <div className="glass rounded-xl p-10 text-center text-white/30 text-sm">
+                    No results found — try different keywords or upload documents in DataHub.
                   </div>
-                </motion.div>
-              );
-            })}
+                )}
+
+                {filteredResults.map((result, i) => {
+                  const Icon = typeIcons[result.type] || FileText;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="glass rounded-xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                          <Icon className="w-5 h-5 text-white/50" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-sm font-medium text-white/90">{result.title}</h4>
+                            <span className="text-[10px] text-white/40 border border-white/10 px-1.5 py-0.5 rounded-full">
+                              {result.relevance}% match
+                            </span>
+                          </div>
+                          <p className="text-xs text-white/50 line-clamp-2 mb-2">{result.snippet}</p>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] text-white/30">{result.source}</span>
+                            <span className="text-[10px] text-white/20">•</span>
+                            <span className="text-[10px] text-white/30">{result.date}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50" />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </>
+            )}
           </motion.div>
         )}
       </div>

@@ -10,9 +10,11 @@ import {
   Database, FileText, Search, Sparkles,
   Activity, Shield, Zap
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Document, Pipeline, AIInsight } from '@/api/entities';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [counts, setCounts] = useState({
     documents: '…',
     pipelines: '…',
@@ -72,13 +74,14 @@ export default function Dashboard() {
               <h3 className="text-white font-medium mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { label: 'Upload Data', icon: Database },
-                  { label: 'AI Query', icon: Sparkles },
-                  { label: 'New Pipeline', icon: Activity },
-                  { label: 'Security Scan', icon: Shield }
+                  { label: 'Upload Data',   icon: Database, to: '/data-hub'   },
+                  { label: 'AI Query',      icon: Sparkles, to: '/ai-query'   },
+                  { label: 'New Pipeline',  icon: Activity, to: '/connectors' },
+                  { label: 'Security Scan', icon: Shield,   to: '/security'   }
                 ].map((action) => (
                   <button
                     key={action.label}
+                    onClick={() => navigate(action.to)}
                     className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all group"
                   >
                     <action.icon className="w-5 h-5 text-white/40 group-hover:text-white/70" />

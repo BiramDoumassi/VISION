@@ -6,9 +6,6 @@ import {
   Video, File, MoreVertical, Download, Trash2, Tag,
   Clock, Shield, Sparkles, FolderOpen, Plus, Loader2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Document } from '@/api/entities';
 
@@ -114,6 +111,23 @@ export default function DataHub() {
     toast.success(`${files.length} fichier${files.length > 1 ? 's importés' : ' importé'} avec succès`);
   };
 
+  const handleDownload = (doc) => {
+    setOpenMenu(null);
+    const metadata = {
+      name: doc.name, type: doc.type, size: doc.size,
+      category: doc.category, sensitivity: doc.sensitivity,
+      date: doc.date, aiSummary: doc.aiSummary,
+    };
+    const blob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/\.[^.]+$/, '')}_metadata.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Métadonnées de "${doc.name}" téléchargées`);
+  };
+
   const handleDelete = async (id) => {
     setOpenMenu(null);
     if (!String(id).startsWith('local-')) {
@@ -168,46 +182,37 @@ export default function DataHub() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <Input
+              <input
                 placeholder="Search documents..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                className="w-full h-9 pl-9 pr-3 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-white/30 outline-none focus:border-white/20"
               />
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
               {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                <button key={cat} onClick={() => setActiveCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    activeCategory === cat
-                      ? 'bg-white text-black'
-                      : 'text-white/50 hover:text-white hover:bg-white/5'
-                  }`}
-                >
+                    activeCategory === cat ? 'bg-white text-black' : 'text-white/50 hover:text-white hover:bg-white/5'
+                  }`}>
                   {cat}
                 </button>
               ))}
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-white/50 hover:text-white hover:bg-white/5">
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors">
                 <Filter className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setView(view === 'grid' ? 'list' : 'grid')}
-                className="text-white/50 hover:text-white hover:bg-white/5"
-              >
+              </button>
+              <button onClick={() => setView(view === 'grid' ? 'list' : 'grid')}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors">
                 {view === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
-              </Button>
-              <Button onClick={() => fileInputRef.current?.click()} className="bg-white text-black hover:bg-white/90 gap-2">
-                <Upload className="w-4 h-4" />
-                Upload
-              </Button>
+              </button>
+              <button onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 h-9 rounded-xl bg-white text-black hover:bg-white/90 text-sm font-medium transition-colors">
+                <Upload className="w-4 h-4" /> Upload
+              </button>
               <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUpload} />
             </div>
           </div>
@@ -245,7 +250,7 @@ export default function DataHub() {
                       {openMenu === doc.id && (
                         <div className="absolute right-0 top-7 glass rounded-xl p-1 min-w-[150px] border border-white/10 shadow-xl">
                           <button
-                            onClick={() => { toast.success(`Téléchargement de ${doc.name}`); setOpenMenu(null); }}
+                            onClick={() => handleDownload(doc)}
                             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/60 hover:bg-white/5 hover:text-white transition-colors"
                           >
                             <Download className="w-3.5 h-3.5" /> Télécharger
@@ -270,9 +275,9 @@ export default function DataHub() {
                   <h3 className="text-sm font-medium text-white/90 mb-2 truncate">{doc.name}</h3>
 
                   <div className="flex items-center gap-2 mb-3">
-                    <Badge className={`text-[10px] ${sensitivityColors[doc.sensitivity] || sensitivityColors.internal}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${sensitivityColors[doc.sensitivity] || sensitivityColors.internal}`}>
                       {doc.sensitivity}
-                    </Badge>
+                    </span>
                     <span className="text-[10px] text-white/30">{doc.size}</span>
                   </div>
 

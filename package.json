@@ -1,0 +1,37 @@
+{
+  "name": "vision",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VISION — globe unifié (Prompt 51). Socle Next.js export statique.",
+  "scripts": {
+    "world": "node scripts/build-world.mjs",
+    "predev": "node scripts/build-world.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/build-world.mjs",
+    "build": "next build",
+    "start": "npx serve out",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.0",
+    "@fontsource/inter": "^5.2.0",
+    "@fontsource/inter-tight": "^5.2.0",
+    "maplibre-gl": "^5.15.0",
+    "next": "^16.0.0",
+    "next-intl": "^4.5.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.0",
+    "topojson-client": "^3.1.0",
+    "typescript": "^5.7.0",
+    "world-atlas": "^2.0.2"
+  }
+}

@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* ── Tokens VISION — repris tels quels de la maquette Figma Make (theme.css) ── */
+:root {
+  --vision-base-void: #0A0C0F;
+  --vision-base-surface: #12151A;
+  --vision-base-line: #232830;
+  --vision-base-text-primary: #E4E7EB;
+  --vision-base-text-muted: #7A8290;
+  --vision-base-signal: #3DA5FF;
+  --vision-base-alert: #E8543D;
+  --vision-base-caution: #D9A441;
+  --vision-base-nominal: #4FAE7C;
+
+  --vision-void: var(--vision-base-void);
+  --vision-surface: var(--vision-base-surface);
+  --vision-line: var(--vision-base-line);
+  --vision-text-primary: var(--vision-base-text-primary);
+  --vision-text-muted: var(--vision-base-text-muted);
+  --vision-signal: var(--vision-base-signal);
+  --vision-alert: var(--vision-base-alert);
+  --vision-caution: var(--vision-base-caution);
+  --vision-nominal: var(--vision-base-nominal);
+
+  --font-tight: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Thème Monochrome : couleurs de statut inchangées */
+.theme-mono {
+  --vision-void: #000000;
+  --vision-surface: #0E0E0E;
+  --vision-line: #3A3A3A;
+  --vision-text-primary: #FFFFFF;
+  --vision-text-muted: #A0A0A0;
+  --vision-signal: #FFFFFF;
+}
+
+@theme inline {
+  --color-void: var(--vision-void);
+  --color-surface: var(--vision-surface);
+  --color-line: var(--vision-line);
+  --color-ink: var(--vision-text-primary);
+  --color-muted: var(--vision-text-muted);
+  --color-signal: var(--vision-signal);
+  --color-alert: var(--vision-alert);
+  --color-caution: var(--vision-caution);
+  --color-nominal: var(--vision-nominal);
+  --font-tight: var(--font-tight);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--vision-void);
+  color: var(--vision-text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Panneaux flottants : fond surface à 92 %, rayon 8 px, aucune ombre décorative */
+.panel {
+  background: color-mix(in srgb, var(--vision-surface) 92%, transparent);
+  border: 1px solid var(--vision-line);
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vision-text-muted);
+}
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Contrôles MapLibre : attribution sobre */
+.maplibregl-ctrl-attrib { background: transparent !important; font-size: 11px; }
+.maplibregl-ctrl-attrib a { color: var(--vision-text-muted) !important; }
+.maplibregl-canvas { outline: none; }
+
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 1px solid var(--vision-signal); outline-offset: 1px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--vision-line); border-radius: 3px; }

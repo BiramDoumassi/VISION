@@ -1,0 +1,40 @@
+{
+  "app": { "demo": "Demo data", "client": "Client" },
+  "search": { "placeholder": "Search a site, a supplier, a country…", "none": "No results" },
+  "layers": {
+    "title": "Layers", "world": "World", "yours": "Your data",
+    "conflicts": "Conflicts and tensions", "restrictions": "Sanctions and export restrictions",
+    "catastrophes": "Disasters and climate", "maritime": "Maritime flows and straits",
+    "sites": "Sites and assets", "suppliers": "Suppliers", "flows": "Logistics flows", "alerts": "Alerts and incidents",
+    "radius": "Crossing radius"
+  },
+  "legend": { "title": "Legend", "nominal": "Normal", "caution": "Watch", "alert": "Critical", "closed": "Strait closed" },
+  "alerts": { "title": "Alerts", "count": "{count, plural, =0 {No alerts} one {# active alert} other {# active alerts}}", "exposure": "Exposed: {value}" },
+  "controls": { "globe": "3D", "flat": "2D", "zoomIn": "Zoom in", "zoomOut": "Zoom out", "recenter": "Recenter" },
+  "kind": { "site": "Site", "supplier": "Supplier", "conflict": "Conflict", "catastrophe": "Disaster", "strait": "Strait" },
+  "status": { "nominal": "Normal", "caution": "Watch", "alert": "Critical", "open": "Open", "closed": "Closed" },
+  "entity": {
+    "why": "Why this status", "whyNominal": "No event affects this object within the crossing radius.",
+    "figures": "Key figures", "links": "Links", "history": "Decision history", "noHistory": "No decision recorded.",
+    "close": "Close", "rank": "Tier {rank}", "since": "since {date}"
+  },
+  "fig": {
+    "share": "Share of spend", "lead": "Standard lead time", "refs": "Part numbers", "sole": "Sole source",
+    "staff": "Headcount", "lines": "Lines", "inTransit": "Orders in transit", "value": "Annual spend"
+  },
+  "links": { "feeds": "Supplies", "upstream": "Upstream suppliers", "suppliers": "Direct suppliers", "none": "—" },
+  "action": { "simulate": "Simulate", "decide": "Decide" },
+  "sim": {
+    "title": "What if this supplier fails?", "sites": "Sites affected", "delay": "Estimated delay", "exposed": "In-transit value exposed",
+    "alternatives": "Ranked alternatives", "noAlt": "No known alternative: sourcing needed.",
+    "lead": "Lead", "price": "Price", "risk": "Risk", "sanctions": "Sanctions", "ok": "OK", "ko": "Blocked",
+    "readonly": "Read-only simulation, no real effect.", "close": "Close simulation", "next": "Next step: decide"
+  },
+  "dec": {
+    "title": "Record a decision", "decision": "Decision", "reason": "Rationale", "rejected": "Alternatives rejected", "owner": "Owner",
+    "save": "Sign and record", "cancel": "Cancel", "tier": "Tier 2 — human validation required. Logged in the Decision Ledger.",
+    "placeholderDecision": "e.g. dual-source with Carbon Saxony", "required": "Decision and owner are required."
+  },
+  "units": { "days": "{n} d", "keur": "€{n}k", "pct": "{n}%" },
+  "theme": { "signal": "SIG", "mono": "MONO" }
+}

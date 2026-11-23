@@ -1,0 +1,40 @@
+{
+  "app": { "demo": "Données de démonstration", "client": "Client" },
+  "search": { "placeholder": "Rechercher un site, un fournisseur, un pays…", "none": "Aucun résultat" },
+  "layers": {
+    "title": "Couches", "world": "Monde", "yours": "Vos données",
+    "conflicts": "Conflits et tensions", "restrictions": "Sanctions et restrictions export",
+    "catastrophes": "Catastrophes et climat", "maritime": "Flux maritimes et détroits",
+    "sites": "Sites et actifs", "suppliers": "Fournisseurs", "flows": "Flux logistiques", "alerts": "Alertes et incidents",
+    "radius": "Rayon de croisement"
+  },
+  "legend": { "title": "Légende", "nominal": "Normal", "caution": "Vigilance", "alert": "Critique", "closed": "Détroit fermé" },
+  "alerts": { "title": "Alertes", "count": "{count, plural, =0 {Aucune alerte} one {# alerte active} other {# alertes actives}}", "exposure": "Exposé : {value}" },
+  "controls": { "globe": "3D", "flat": "2D", "zoomIn": "Zoom avant", "zoomOut": "Zoom arrière", "recenter": "Recentrer" },
+  "kind": { "site": "Site", "supplier": "Fournisseur", "conflict": "Conflit", "catastrophe": "Catastrophe", "strait": "Détroit" },
+  "status": { "nominal": "Normal", "caution": "Vigilance", "alert": "Critique", "open": "Ouvert", "closed": "Fermé" },
+  "entity": {
+    "why": "Pourquoi ce statut", "whyNominal": "Aucun événement ne touche cet objet dans le rayon de croisement.",
+    "figures": "Chiffres clés", "links": "Liens", "history": "Historique des décisions", "noHistory": "Aucune décision enregistrée.",
+    "close": "Fermer", "rank": "Rang {rank}", "since": "depuis le {date}"
+  },
+  "fig": {
+    "share": "Part des achats", "lead": "Délai standard", "refs": "Références", "sole": "Source unique",
+    "staff": "Effectif", "lines": "Lignes", "inTransit": "Commandes en transit", "value": "Achats annuels"
+  },
+  "links": { "feeds": "Approvisionne", "upstream": "Fournisseurs amont", "suppliers": "Fournisseurs directs", "none": "—" },
+  "action": { "simulate": "Simuler", "decide": "Décider" },
+  "sim": {
+    "title": "Et si ce fournisseur tombe ?", "sites": "Sites touchés", "delay": "Retard estimé", "exposed": "Valeur en transit exposée",
+    "alternatives": "Alternatives classées", "noAlt": "Aucune alternative connue : à sourcer.",
+    "lead": "Délai", "price": "Prix", "risk": "Risque", "sanctions": "Sanctions", "ok": "OK", "ko": "Bloqué",
+    "readonly": "Simulation en lecture seule, aucun effet réel.", "close": "Fermer la simulation", "next": "Étape suivante : décider"
+  },
+  "dec": {
+    "title": "Enregistrer une décision", "decision": "Décision", "reason": "Motif", "rejected": "Alternatives écartées", "owner": "Responsable",
+    "save": "Signer et enregistrer", "cancel": "Annuler", "tier": "Tier 2 — validation humaine obligatoire. Tracé dans le Decision Ledger.",
+    "placeholderDecision": "Ex. : doubler la source avec Carbon Saxony", "required": "Décision et responsable obligatoires."
+  },
+  "units": { "days": "{n} j", "keur": "{n} k€", "pct": "{n} %" },
+  "theme": { "signal": "SIG", "mono": "MONO" }
+}

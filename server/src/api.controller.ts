@@ -1,7 +1,8 @@
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Put, Query, Req } from "@nestjs/common";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { audit, withOrg } from "./db";
+import { audit, pool, withOrg } from "./db";
+import { importSnapshot, refreshWorld, worldSnapshot } from "./world";
 import { Roles, type AuthedRequest, type Principal } from "./auth";
 
 const newId = (p: string) => `${p}-${randomBytes(5).toString("hex").toUpperCase()}`;
@@ -28,6 +29,11 @@ const DatasetIn = z.object({
 });
 const DecisionIn = z.object({ entityId: z.string().min(1), decision: z.string().min(1).max(2000), reason: z.string().max(4000).default(""), rejected: z.string().max(2000).default(""), owner: z.string().min(1).max(200) });
 const OrderIn = z.object({ entityId: z.string().min(1), vendorId: z.string().min(1), vendorName: z.string().min(1).max(200), quantity: z.string().max(200).default(""), note: z.string().max(2000).default(""), owner: z.string().min(1).max(200) });
+const RestrictionIn = z.object({ countryIso: z.string().regex(/^\d{3}$/), titleFr: z.string().min(1).max(300), titleEn: z.string().min(1).max(300), source: z.string().min(1).max(200), since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() });
+const SnapshotIn = z.object({ worldEvents: z.array(z.object({
+  id: z.string(), kind: z.enum(["conflict", "catastrophe"]), sub: z.string(), coord, countryIso: z.string(), severity: z.enum(["high", "medium"]),
+  title: txt, source: z.string().min(1), since: z.string(), until: z.string().optional(), url: z.string().optional(),
+})).max(20000) });
 const IncidentIn = z.object({ entityId: z.string().min(1), title: z.string().min(1).max(300), severity: z.enum(["high", "medium"]), owner: z.string().min(1).max(200), due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
 
 @Controller()
@@ -157,6 +163,49 @@ export class ApiController {
       await audit(c, p.org, p.sub, "incident.close", "incident", id);
       return { ok: true };
     });
+  }
+
+  // ── Données Monde (partagées) ───────────────────────────────────────────────
+  @Get("world")
+  world() { return worldSnapshot(); }
+
+  @Post("world/refresh")
+  @Roles("admin")
+  async refresh() { await refreshWorld(); return worldSnapshot(); }
+
+  // Restrictions export / sanctions : saisies par l'équipe conformité, avec leur source officielle.
+  @Post("world/restrictions")
+  @Roles("admin")
+  async addRestriction(@Req() req: AuthedRequest, @Body() body: unknown) {
+    const p = who(req);
+    const r = parse(RestrictionIn, body);
+    const id = newId("RS");
+    const item = { id, kind: "restriction", countryIso: r.countryIso, title: { fr: r.titleFr, en: r.titleEn }, source: r.source, since: r.since, until: r.until };
+    await pool.query("INSERT INTO world_items (id, kind, source, since, until, payload) VALUES ($1, 'restriction', 'CONFORMITE', $2, $3, $4)", [id, r.since, r.until ?? null, JSON.stringify(item)]);
+    await withOrg(p.org, (c) => audit(c, p.org, p.sub, "world.restriction.add", "restriction", id, { countryIso: r.countryIso, source: r.source }));
+    return item;
+  }
+
+  @Patch("world/restrictions/:id/end")
+  @Roles("admin")
+  async endRestriction(@Req() req: AuthedRequest, @Param("id") id: string) {
+    const p = who(req);
+    const today = new Date().toISOString().slice(0, 10);
+    const r = await pool.query(`UPDATE world_items SET until = $2, payload = payload || jsonb_build_object('until', $2::text), updated_at = now() WHERE id = $1 AND kind = 'restriction' RETURNING id`, [id, today]);
+    if (!r.rowCount) throw new NotFoundException("Restriction introuvable");
+    await withOrg(p.org, (c) => audit(c, p.org, p.sub, "world.restriction.end", "restriction", id));
+    return { ok: true };
+  }
+
+  // Sas de fichiers pour les déploiements sans réseau (DDIL).
+  @Post("world/import")
+  @Roles("admin")
+  async importWorld(@Req() req: AuthedRequest, @Body() body: unknown) {
+    const p = who(req);
+    const snap = parse(SnapshotIn, body);
+    const res = await importSnapshot(snap as Parameters<typeof importSnapshot>[0]);
+    await withOrg(p.org, (c) => audit(c, p.org, p.sub, "world.import", "world", null, { sources: res }));
+    return res;
   }
 
   // ── Journal d'audit (administrateurs) ───────────────────────────────────────

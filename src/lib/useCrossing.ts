@@ -17,9 +17,11 @@ export function useDataset() {
 
 export function useCrossing() {
   const radiusKm = useVision((s) => s.radiusKm);
+  const worldVersion = useVision((s) => s.worldVersion);
   const at = useAt();
   const ds = useDataset();
-  return useMemo(() => computeCrossing(ds, radiusKm, at), [ds, radiusKm, at]);
+  // worldVersion : les données Monde ont été rechargées depuis le serveur
+  return useMemo(() => computeCrossing(ds, radiusKm, at), [ds, radiusKm, at, worldVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 export function useSimulation() {

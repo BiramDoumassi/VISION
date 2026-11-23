@@ -52,6 +52,12 @@ services:
       DATABASE_ADMIN_URL: postgres://postgres:${PG_ADMIN_PASSWORD:-change-moi-admin}@db:5432/vision
       VISION_ORGS: "demo:Démonstration"
       CORS_ORIGINS: http://localhost:8081
+      # Données Monde (lot C). WORLD_OFFLINE=true pour un site sans Internet : import par fichier via /api/world/import.
+      WORLD_SOURCES: ${WORLD_SOURCES:-usgs,gdacs}
+      WORLD_REFRESH_MIN: "30"
+      WORLD_OFFLINE: ${WORLD_OFFLINE:-false}
+      ACLED_EMAIL: ${ACLED_EMAIL:-}
+      ACLED_PASSWORD: ${ACLED_PASSWORD:-}
     ports:
       - "4000:4000"
 

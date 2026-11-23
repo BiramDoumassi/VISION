@@ -363,7 +363,8 @@ export function EntityPanel() {
               {restrictions.every((r) => r.countryIso !== e.num || !isActive(r, at)) && worldEvents.every((w) => w.countryIso !== e.num || !isActive(w, at)) && <li className="text-muted">{t("entity.whyNominal")}</li>}
             </ul>
           ) : (
-            <p className="text-[12px] leading-snug">{tx(e.title)}<span className="block text-[11px] text-muted">{e.source} · {t("entity.since", { date: fmtDate(e.kind === "infra" && e.disruptedSince ? e.disruptedSince : e.kind === "strait" && e.closedSince ? e.closedSince : e.since) })}</span></p>
+            <p className="text-[12px] leading-snug">{tx(e.title)}<span className="block text-[11px] text-muted">{e.source} · {t("entity.since", { date: fmtDate(e.kind === "infra" && e.disruptedSince ? e.disruptedSince : e.kind === "strait" && e.closedSince ? e.closedSince : e.since) })}</span>
+              {"url" in e && e.url && <a href={e.url} target="_blank" rel="noreferrer noopener" className="mt-1 inline-block text-[11px] text-signal hover:underline">{t("entity.source")} ↗</a>}</p>
           )}
         </Section>
 

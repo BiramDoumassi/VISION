@@ -5,6 +5,7 @@ import type { NestExpressApplication } from "@nestjs/platform-express";
 import { ApiController } from "./api.controller";
 import { AuthGuard } from "./auth";
 import { migrate } from "./db";
+import { startWorldScheduler } from "./world";
 
 @Module({
   controllers: [ApiController],
@@ -23,5 +24,6 @@ async function bootstrap() {
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port);
   console.log(`VISION API sur :${port} (auth ${process.env.AUTH_MODE ?? "keycloak"})`);
+  startWorldScheduler();
 }
 bootstrap().catch((e) => { console.error(e); process.exit(1); });

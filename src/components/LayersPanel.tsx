@@ -27,7 +27,8 @@ export function LayersPanel() {
   const t = useTranslations("layers");
   const ti = useTranslations("import");
   const tx = useTx();
-  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub, me } = useVision();
+  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub, me, worldSources, locale } = useVision();
+  const ago = (iso: string) => { const h = Math.round((Date.now() - Date.parse(iso)) / 3_600_000); return h < 1 ? (locale === "fr" ? "< 1 h" : "< 1 h") : `${h} h`; };
   const mayImport = can(me, "analyze");
   const [open, setOpen] = useState<string | null>(null);
 
@@ -84,6 +85,16 @@ export function LayersPanel() {
         <div className="label mb-1.5 px-1">{t("yours")}</div>
         <div className="mb-3">{YOURS.map(row)}</div>
         <div className="label mb-1.5 px-1">{t("world")}</div>
+        {worldSources && (
+          <div className="mb-2 flex flex-wrap gap-1.5 px-1" aria-label={t("sources")}>
+            {worldSources.map((s) => (
+              <span key={s.name} title={s.lastError ?? undefined} className="num rounded border border-line px-1.5 py-0.5 text-[10px]"
+                style={{ color: s.lastError && !s.lastOk ? "var(--vision-alert)" : s.lastError ? "var(--vision-caution)" : "var(--vision-nominal)" }}>
+                {s.name.toUpperCase()} {s.lastOk ? ago(s.lastOk) : "✕"}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mb-3">{WORLD.map(row)}</div>
       </div>
       <div className="border-t border-line px-1 pt-3">

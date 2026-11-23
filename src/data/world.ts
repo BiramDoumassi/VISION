@@ -12,7 +12,7 @@ export type Severity = "high" | "medium";
 
 export type WorldEvent = {
   id: string; kind: "conflict" | "catastrophe"; sub: string; coord: LngLat; countryIso: string;
-  severity: Severity; title: Txt; source: string; since: string; until?: string;
+  severity: Severity; title: Txt; source: string; since: string; until?: string; url?: string;
 };
 export type Restriction = { id: string; kind: "restriction"; countryIso: string; title: Txt; source: string; since: string; until?: string };
 export type Strait = { id: string; kind: "strait"; name: string; coord: LngLat; closedSince?: string; closedUntil?: string; title: Txt; source: string; since: string };
@@ -32,6 +32,9 @@ export const SUBTYPES: Record<string, { id: string; label: Txt }[]> = {
     { id: "flood", label: { fr: "Inondations", en: "Floods" } },
     { id: "quake", label: { fr: "Séismes", en: "Earthquakes" } },
     { id: "fire", label: { fr: "Incendies", en: "Wildfires" } },
+    { id: "storm", label: { fr: "Cyclones", en: "Cyclones" } },
+    { id: "volcano", label: { fr: "Volcans", en: "Volcanoes" } },
+    { id: "drought", label: { fr: "Sécheresses", en: "Droughts" } },
   ],
   infra: [
     { id: "power", label: { fr: "Énergie", en: "Power" } },
@@ -103,3 +106,19 @@ export const countryRisk: CountryRisk[] = [
   { num: "218", score: 58 }, { num: "484", score: 55 }, { num: "076", score: 40 }, { num: "710", score: 43 }, { num: "566", score: 66 },
   { num: "784", score: 30 }, { num: "682", score: 38 }, { num: "818", score: 50 }, { num: "504", score: 32 }, { num: "012", score: 45 },
 ];
+
+// ── Données réelles (mode serveur) ───────────────────────────────────────────
+// Remplace sur place les événements et restrictions de démonstration par la photo servie par l'API.
+// Les détroits, infrastructures, espaces aériens et satellites restent en démonstration (flux AIS/NOTAM payants à brancher).
+export type WorldSnapshot = {
+  generatedAt: string;
+  live: { conflicts: boolean; catastrophes: boolean; restrictions: boolean };
+  sources: { name: string; lastOk: string | null; lastError: string | null; lastTry: string | null; count: number }[];
+  worldEvents: WorldEvent[];
+  restrictions: Restriction[];
+};
+export function applyWorldSnapshot(snap: WorldSnapshot) {
+  const keep = worldEvents.filter((e) => (e.kind === "conflict" ? !snap.live.conflicts : !snap.live.catastrophes));
+  worldEvents.splice(0, worldEvents.length, ...keep, ...snap.worldEvents);
+  if (snap.live.restrictions) restrictions.splice(0, restrictions.length, ...snap.restrictions);
+}

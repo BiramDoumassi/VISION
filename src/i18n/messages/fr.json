@@ -2,7 +2,8 @@
   "app": {
     "demo": "Données de démonstration",
     "client": "Client",
-    "worldDemo": "Couches Monde : événements de démonstration"
+    "worldDemo": "Couches Monde : événements de démonstration",
+    "worldPartial": "Détroits, infrastructures, espaces aériens et satellites : démonstration"
   },
   "search": {
     "placeholder": "Rechercher un site, un fournisseur, un pays…",
@@ -25,7 +26,8 @@
     "infra": "Infrastructures critiques",
     "space": "Spatial",
     "countryRisk": "Risque pays",
-    "subs": "Sous-filtres"
+    "subs": "Sous-filtres",
+    "sources": "Sources"
   },
   "legend": {
     "title": "Légende",
@@ -89,7 +91,8 @@
     "orbit": "Orbite",
     "revisit": "Revisite",
     "radius": "Rayon",
-    "disruptedSince": "Perturbée depuis le {date}"
+    "disruptedSince": "Perturbée depuis le {date}",
+    "source": "Voir la source"
   },
   "fig": {
     "share": "Part des achats",

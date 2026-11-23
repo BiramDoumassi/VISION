@@ -68,6 +68,7 @@ export function Globe() {
   const projection = useVision((s) => s.projection);
   const flyTarget = useVision((s) => s.flyTarget);
   const selectedId = useVision((s) => s.selectedId);
+  const worldVersion = useVision((s) => s.worldVersion);
 
   // Création de la carte
   useEffect(() => {
@@ -204,7 +205,7 @@ export function Globe() {
     const simIds = new Set(sim?.impactedFlows ?? []);
     set("sim-flows", fc(flows.filter((f) => simIds.has(f.id)).map((f) => line(f.id, flowPath(ds, f), {}))));
   };
-  useEffect(pushData, [ready, ds, at, crossing, sim]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(pushData, [ready, ds, at, crossing, sim, worldVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Visibilité des couches et sous-filtres
   useEffect(() => {

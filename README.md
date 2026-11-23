@@ -38,6 +38,22 @@ AUTH_MODE=dev DATABASE_URL=postgres://vision_app@localhost:5432/vision \
   DATABASE_ADMIN_URL=postgres://postgres@localhost:5432/vision node dist/main.js
 ```
 
+### Données Monde réelles (lot C)
+
+L'API alimente les couches Monde depuis des sources publiques, toutes les 30 minutes, et garde la dernière photo si le réseau tombe.
+
+| Source | Couche | Accès | Variable |
+| --- | --- | --- | --- |
+| USGS (séismes M5,5+, 7 jours) | Catastrophes | Public, sans clé (domaine public) | `WORLD_SOURCES` contient `usgs` |
+| GDACS (alertes orange et rouges, 14 jours : séismes, inondations, cyclones, feux, volcans, sécheresses) | Catastrophes | Public, sans clé | `WORLD_SOURCES` contient `gdacs` |
+| ACLED (affrontements, frappes, violences contre des civils, 14 jours) | Conflits | Compte myACLED ; licence requise pour un usage commercial | `acled` + `ACLED_EMAIL`, `ACLED_PASSWORD` |
+| Restrictions export / sanctions | Sanctions | Saisie par l'équipe conformité (`POST /api/world/restrictions`, admin), avec la source officielle | — |
+
+- Tant qu'une source n'est pas branchée, sa couche garde les événements de démonstration, marqués DÉMO. Détroits, infrastructures, espaces aériens et satellites restent en démonstration (flux AIS, NOTAM et catalogues orbitaux payants à choisir).
+- Site sans Internet : `WORLD_OFFLINE=true`, puis import d'une photo préparée ailleurs via `POST /api/world/import` (admin).
+- L'état de chaque source s'affiche dans le panneau Couches (vert : à jour ; rouge : jamais récupérée).
+- Les analyseurs sont testés sur des échantillons au format documenté (`cd server && npm test`) ; les appels réels n'ont pas pu être faits depuis l'environnement de développement.
+
 ### Déploiement sur site
 
 `deploy/docker-compose.yml` lance PostgreSQL, Keycloak (realm `vision` importé depuis `deploy/keycloak/vision-realm.json`), l'API et l'interface (nginx).
@@ -99,7 +115,7 @@ Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré
 
 ## Limites connues (à traiter ensuite)
 
-- Les couches Monde restent des événements de démonstration (lot C : ingestion des vraies sources côté serveur).
+- En mode local (sans serveur), les couches Monde restent des événements de démonstration.
 - Le déploiement Docker et le realm Keycloak n'ont pas pu être lancés dans l'environnement de développement (images inaccessibles) : à valider au premier `docker compose up`. L'API, PostgreSQL/RLS et la vérification des jetons OIDC ont été testés.
 - La barre de recherche n'est pas encore la barre VISION AI en langage naturel (lot D).
 - Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.

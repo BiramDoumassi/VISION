@@ -2,7 +2,8 @@
   "app": {
     "demo": "Demo data",
     "client": "Client",
-    "worldDemo": "World layers: demo events"
+    "worldDemo": "World layers: demo events",
+    "worldPartial": "Straits, infrastructure, airspace and satellites: demo"
   },
   "search": {
     "placeholder": "Search a site, a supplier, a country…",
@@ -25,7 +26,8 @@
     "infra": "Critical infrastructure",
     "space": "Space",
     "countryRisk": "Country risk",
-    "subs": "Sub-filters"
+    "subs": "Sub-filters",
+    "sources": "Sources"
   },
   "legend": {
     "title": "Legend",
@@ -89,7 +91,8 @@
     "orbit": "Orbit",
     "revisit": "Revisit",
     "radius": "Radius",
-    "disruptedSince": "Disrupted since {date}"
+    "disruptedSince": "Disrupted since {date}",
+    "source": "View source"
   },
   "fig": {
     "share": "Share of spend",

@@ -90,6 +90,7 @@ function BriefCard() {
   const tx = useTx();
   const ds = useDataset();
   const { briefOpen, setBriefOpen, dayOffset, select } = useVision();
+  useVision((s) => s.worldVersion); // se redessine quand la photo Monde change
   if (!briefOpen || dayOffset !== 0) return null;
   const today = dayIso(0), yesterday = dayIso(-1), horizon = dayIso(14);
   const fresh: { id: string; since: string }[] = [

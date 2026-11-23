@@ -1,6 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { DEMO_DATASET, type Dataset } from "@/data/demo";
+import { DEMO_DATASET, applyWorldSnapshot, type Dataset, type WorldSnapshot } from "@/data/demo";
 import { api, apiEnabled, initBackend, type Me } from "@/lib/backend";
 
 export type Locale = "fr" | "en";
@@ -27,6 +27,8 @@ type State = {
   backend: "loading" | "local" | "api";
   me: Me | null;
   syncError: string | null;
+  worldVersion: number;
+  worldSources: WorldSnapshot["sources"] | null;
   dataset: Dataset;
   importOpen: boolean;
   locale: Locale;
@@ -76,6 +78,8 @@ export const useVision = create<State>((set, get) => ({
   backend: "loading",
   me: null,
   syncError: null,
+  worldVersion: 0,
+  worldSources: null,
   dataset: DEMO_DATASET,
   importOpen: false,
   locale: "fr",
@@ -176,6 +180,8 @@ export async function hydrateFromStorage() {
         api<Incident[]>("GET", "/incidents?status=open"),
       ]);
       useVision.setState({ backend: "api", me: b.me, dataset: ds ?? DEMO_DATASET, ledger, orders, incidents });
+      await loadWorld();
+      setInterval(loadWorld, 10 * 60_000);
       return;
     }
   } catch (e) {
@@ -189,6 +195,17 @@ export async function hydrateFromStorage() {
     incidents: read<Incident[]>("vision.incidents", []),
     dataset: read<Dataset>("vision.dataset", DEMO_DATASET),
   });
+}
+
+// Photo Monde servie par l'API : remplace les événements de démonstration.
+async function loadWorld() {
+  try {
+    const snap = await api<WorldSnapshot>("GET", "/world");
+    applyWorldSnapshot(snap);
+    useVision.setState((s) => ({ worldVersion: s.worldVersion + 1, worldSources: snap.sources }));
+  } catch (e) {
+    useVision.setState({ syncError: e instanceof Error ? e.message : String(e) });
+  }
 }
 
 // Droits d'action selon les rôles Keycloak (en mode local, tout est permis).

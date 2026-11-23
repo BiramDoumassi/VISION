@@ -12,6 +12,7 @@ export function Timeline() {
   const t = useTranslations("timeline");
   const locale = useLocale();
   const { dayOffset, setDayOffset, selectedId } = useVision();
+  useVision((s) => s.worldVersion);
   const [playing, setPlaying] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 

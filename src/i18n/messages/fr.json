@@ -20,19 +20,27 @@
     "suppliers": "Fournisseurs",
     "flows": "Flux logistiques",
     "alerts": "Alertes et incidents",
-    "radius": "Rayon de croisement"
+    "radius": "Rayon de croisement",
+    "air": "Flux aériens et espaces fermés",
+    "infra": "Infrastructures critiques",
+    "space": "Spatial",
+    "countryRisk": "Risque pays",
+    "subs": "Sous-filtres"
   },
   "legend": {
     "title": "Légende",
     "nominal": "Normal",
     "caution": "Vigilance",
     "alert": "Critique",
-    "closed": "Détroit fermé"
+    "closed": "Détroit fermé",
+    "disrupted": "Infra. perturbée",
+    "airspace": "Espace aérien fermé"
   },
   "alerts": {
     "title": "Alertes",
     "count": "{count, plural, =0 {Aucune alerte} one {# alerte active} other {# alertes actives}}",
-    "exposure": "Exposé : {value}"
+    "exposure": "Exposé : {value}",
+    "incidents": "{count, plural, one {# incident ouvert} other {# incidents ouverts}}"
   },
   "controls": {
     "globe": "3D",
@@ -46,14 +54,20 @@
     "supplier": "Fournisseur",
     "conflict": "Conflit",
     "catastrophe": "Catastrophe",
-    "strait": "Détroit"
+    "strait": "Détroit",
+    "infra": "Infrastructure",
+    "airspace": "Espace aérien",
+    "satellite": "Satellite",
+    "country": "Pays"
   },
   "status": {
     "nominal": "Normal",
     "caution": "Vigilance",
     "alert": "Critique",
     "open": "Ouvert",
-    "closed": "Fermé"
+    "closed": "Fermé",
+    "disrupted": "Perturbée",
+    "ok": "Normale"
   },
   "entity": {
     "why": "Pourquoi ce statut",
@@ -64,7 +78,18 @@
     "noHistory": "Aucune décision enregistrée.",
     "close": "Fermer",
     "rank": "Rang {rank}",
-    "since": "depuis le {date}"
+    "since": "depuis le {date}",
+    "orders": "Commandes",
+    "incidents": "Incidents ouverts",
+    "score": "Score de risque",
+    "restrictionsIn": "Restrictions en vigueur",
+    "eventsIn": "Événements en cours",
+    "exposure": "Votre exposition",
+    "noExposure": "Aucun site ni fournisseur dans ce pays.",
+    "orbit": "Orbite",
+    "revisit": "Revisite",
+    "radius": "Rayon",
+    "disruptedSince": "Perturbée depuis le {date}"
   },
   "fig": {
     "share": "Part des achats",
@@ -84,7 +109,10 @@
   },
   "action": {
     "simulate": "Simuler",
-    "decide": "Décider"
+    "decide": "Décider",
+    "order": "Commander",
+    "incident": "Incident",
+    "brief": "Briefer"
   },
   "sim": {
     "title": "Et si ce fournisseur tombe ?",
@@ -163,5 +191,55 @@
       "badFile": "Fichier illisible : utilisez .xlsx ou .csv",
       "duplicate": "« {value} » en double : seconde ligne ignorée"
     }
+  },
+  "timeline": {
+    "past": "−30 j",
+    "now": "Aujourd'hui",
+    "forecast": "+14 j",
+    "play": "Rejouer les 30 derniers jours",
+    "pause": "Pause",
+    "back": "Revenir à aujourd'hui",
+    "forecastTag": "Prévision"
+  },
+  "brief": {
+    "title": "Depuis hier",
+    "none": "Rien de nouveau depuis hier.",
+    "newEvent": "Nouveau : {title}",
+    "close": "Masquer",
+    "upcoming": "À venir le {date} : {title}"
+  },
+  "order": {
+    "title": "Commander à un fournisseur alternatif",
+    "vendor": "Vendu par {name}",
+    "none": "Aucun fournisseur alternatif connu pour ce produit.",
+    "quantity": "Quantité / référence",
+    "note": "Commentaire",
+    "owner": "Demandeur",
+    "send": "Envoyer la demande",
+    "catalog": "Demande envoyée au fournisseur, sans paiement. Tracée dans le Decision Ledger.",
+    "blocked": "Bloqué : sanctions",
+    "pick": "Choisissez un fournisseur.",
+    "sanctionsCheck": "Contrôle sanctions"
+  },
+  "incident": {
+    "title": "Déclencher un incident",
+    "name": "Intitulé",
+    "severity": "Gravité",
+    "high": "Élevée",
+    "medium": "Moyenne",
+    "owner": "Responsable",
+    "due": "Échéance",
+    "create": "Ouvrir l'incident",
+    "default": "Rupture d'approvisionnement — {name}"
+  },
+  "brf": {
+    "title": "Note de situation",
+    "generated": "Générée par VISION le {date}",
+    "situation": "Situation",
+    "impact": "Impact estimé si l'objet tombe",
+    "options": "Options",
+    "decisions": "Décisions et actions",
+    "print": "Imprimer / enregistrer en PDF",
+    "none": "Aucune."
   }
 }

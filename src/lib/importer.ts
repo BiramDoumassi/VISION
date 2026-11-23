@@ -217,7 +217,7 @@ export async function importFile(file: File): Promise<ImportResult> {
         : nat.startsWith("fourn") || nat.startsWith("suppl") ? "suppliers" : kind;
       if (rowKind === "sites") {
         sites.push({
-          id: makeId("site", name), kind: "site", name, city, country: loc.countryLabel, coord: loc.coord,
+          id: makeId("site", name), kind: "site", name, city, country: loc.countryLabel, countryIso: loc.country?.num, coord: loc.coord,
           type: { fr: str(r[h.type]) || "Site", en: str(r[h.type]) || "Site" },
           staff: num(r[h.staff]) ?? 0, lines: num(r[h.lines]) ?? 0,
         });

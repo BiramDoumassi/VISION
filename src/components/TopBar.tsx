@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { worldEvents, straits } from "@/data/demo";
+import { worldEvents, straits, infra, satellites } from "@/data/demo";
+import { allCountries } from "@/lib/countries";
 import { useCrossing, useDataset, useTx } from "@/lib/useCrossing";
 import { useVision } from "@/store/useVision";
 import { IconBell, IconSearch, VisionMark } from "./icons";
@@ -34,6 +35,9 @@ export function TopBar() {
       ...suppliers.map((x) => ({ id: x.id, label: x.name, sub: `${tx(x.product)} · ${x.country}`, hay: `${x.name} ${x.city} ${x.country} ${x.product.fr} ${x.product.en}` })),
       ...worldEvents.map((x) => ({ id: x.id, label: tx(x.title), sub: x.source, hay: `${x.title.fr} ${x.title.en}` })),
       ...straits.map((x) => ({ id: x.id, label: x.name, sub: tx(x.title), hay: x.name })),
+      ...infra.map((x) => ({ id: x.id, label: x.name, sub: tx(x.title), hay: x.name })),
+      ...satellites.map((x) => ({ id: x.id, label: x.name, sub: tx(x.title), hay: x.name })),
+      ...allCountries().map((c) => ({ id: `ctry-${c.num}`, label: tx(c.name), sub: c.a2, hay: `${c.name.fr} ${c.name.en} ${c.a2}` })),
     ];
     return pool.filter((p) => p.hay.toLowerCase().includes(s)).slice(0, 7);
   }, [q, tx, sites, suppliers]);

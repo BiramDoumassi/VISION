@@ -2,12 +2,20 @@
 // Tous les noms d'entreprises sont inventés. Les événements « Monde » sont fictifs et marqués DÉMO.
 // À remplacer par les données du prospect (connecteurs ERP / import Excel) lors d'un pilote.
 
+import {
+  airspaces, countryRisk, infra, satellites, straits, worldEvents,
+  type Airspace, type Infra, type Satellite, type Strait, type WorldEvent,
+} from "./world";
+import { countryRef } from "@/lib/countries";
+
+export * from "./world";
+
 export type Lang = "fr" | "en";
 export type Txt = { fr: string; en: string };
 export type LngLat = [number, number];
 
 export type Site = {
-  id: string; kind: "site"; name: string; city: string; country: string; coord: LngLat;
+  id: string; kind: "site"; name: string; city: string; country: string; countryIso?: string; coord: LngLat;
   type: Txt; staff: number; lines: number;
 };
 
@@ -30,23 +38,12 @@ export type Flow = {
   ordersInTransit: number; valueKEur: number;
 };
 
-export type Severity = "high" | "medium";
-
-export type WorldEvent = {
-  id: string; kind: "conflict" | "catastrophe"; coord: LngLat; severity: Severity;
-  title: Txt; source: string; since: string;
-};
-
-export type Restriction = { id: string; kind: "restriction"; countryIso: string; title: Txt; source: string; since: string };
-
-export type Strait = { id: string; kind: "strait"; name: string; coord: LngLat; status: "open" | "closed"; title: Txt; source: string; since: string };
-
 export const CLIENT = { name: "Compositec Industrie", sector: { fr: "Sous-traitant aéro-défense", en: "Aerospace-defense subcontractor" } };
 
 export const sites: Site[] = [
-  { id: "site-tls", kind: "site", name: "Compositec Toulouse", city: "Toulouse", country: "France", coord: [1.44, 43.6], type: { fr: "Usine — pièces composites", en: "Plant — composite parts" }, staff: 420, lines: 6 },
-  { id: "site-mrg", kind: "site", name: "Compositec Mérignac", city: "Mérignac", country: "France", coord: [-0.7, 44.83], type: { fr: "Usine — assemblage", en: "Plant — assembly" }, staff: 260, lines: 3 },
-  { id: "site-stn", kind: "site", name: "Compositec Saint-Nazaire", city: "Saint-Nazaire", country: "France", coord: [-2.2, 47.27], type: { fr: "Entrepôt et finition", en: "Warehouse and finishing" }, staff: 110, lines: 2 },
+  { id: "site-tls", kind: "site", name: "Compositec Toulouse", city: "Toulouse", country: "France", countryIso: "250", coord: [1.44, 43.6], type: { fr: "Usine — pièces composites", en: "Plant — composite parts" }, staff: 420, lines: 6 },
+  { id: "site-mrg", kind: "site", name: "Compositec Mérignac", city: "Mérignac", country: "France", countryIso: "250", coord: [-0.7, 44.83], type: { fr: "Usine — assemblage", en: "Plant — assembly" }, staff: 260, lines: 3 },
+  { id: "site-stn", kind: "site", name: "Compositec Saint-Nazaire", city: "Saint-Nazaire", country: "France", countryIso: "250", coord: [-2.2, 47.27], type: { fr: "Entrepôt et finition", en: "Warehouse and finishing" }, staff: 110, lines: 2 },
 ];
 
 export const suppliers: Supplier[] = [
@@ -70,6 +67,7 @@ export const flows: Flow[] = [
   { id: "f-atl-mrg", from: "sup-atl", to: "site-mrg", mode: "road", via: [], ordersInTransit: 1, valueKEur: 70 },
   { id: "f-hexa-tls", from: "sup-hexa", to: "site-tls", mode: "road", via: [], ordersInTransit: 2, valueKEur: 260 },
   { id: "f-nagoya-tls", from: "sup-nagoya", to: "site-tls", mode: "sea", via: ["str-malacca", "str-bab", "str-suez"], ordersInTransit: 3, valueKEur: 520 },
+  { id: "f-nagoya-tls-air", from: "sup-nagoya", to: "site-tls", mode: "air", via: [], ordersInTransit: 1, valueKEur: 80 },
   { id: "f-kura-rhone", from: "sup-kura", to: "sup-rhone", mode: "road", via: [], ordersInTransit: 2, valueKEur: 210 },
   { id: "f-kura-hexa", from: "sup-kura", to: "sup-hexa", mode: "road", via: [], ordersInTransit: 1, valueKEur: 95 },
   { id: "f-lomb-rhone", from: "sup-lomb", to: "sup-rhone", mode: "road", via: [], ordersInTransit: 2, valueKEur: 120 },
@@ -78,26 +76,8 @@ export const flows: Flow[] = [
   { id: "f-gujarat-nagoya", from: "sup-gujarat", to: "sup-nagoya", mode: "sea", via: ["str-malacca"], ordersInTransit: 1, valueKEur: 0 },
 ];
 
-export const worldEvents: WorldEvent[] = [
-  { id: "ev-kura", kind: "conflict", coord: [46.62, 40.48], severity: "high", title: { fr: "Affrontements frontaliers (DÉMO)", en: "Border clashes (DEMO)" }, source: "ACLED (démo)", since: "2026-11-21" },
-  { id: "ev-sahel", kind: "conflict", coord: [0.5, 14.5], severity: "high", title: { fr: "Violences armées, Sahel central (DÉMO)", en: "Armed violence, central Sahel (DEMO)" }, source: "ACLED (démo)", since: "2026-11-02" },
-  { id: "ev-redsea", kind: "conflict", coord: [43.1, 13.6], severity: "high", title: { fr: "Attaques contre des navires marchands (DÉMO)", en: "Attacks on merchant ships (DEMO)" }, source: "UCDP (démo)", since: "2026-11-15" },
-  { id: "ev-flood", kind: "catastrophe", coord: [72.75, 23.1], severity: "medium", title: { fr: "Inondations — alerte orange (DÉMO)", en: "Floods — orange alert (DEMO)" }, source: "GDACS (démo)", since: "2026-11-20" },
-  { id: "ev-quake", kind: "catastrophe", coord: [142.2, 38.3], severity: "medium", title: { fr: "Séisme M6,1 au large (DÉMO)", en: "M6.1 offshore earthquake (DEMO)" }, source: "USGS (démo)", since: "2026-11-19" },
-];
-
-export const restrictions: Restriction[] = [
-  { id: "rs-031", kind: "restriction", countryIso: "031", title: { fr: "Restriction export annoncée — matériaux composites (DÉMO)", en: "Announced export restriction — composite materials (DEMO)" }, source: "Journal officiel (démo)", since: "2026-11-22" },
-];
-
-export const straits: Strait[] = [
-  { id: "str-bab", kind: "strait", name: "Bab-el-Mandeb", coord: [43.33, 12.6], status: "closed", title: { fr: "Passage suspendu pour le fret commercial (DÉMO)", en: "Commercial transit suspended (DEMO)" }, source: "AIS (démo)", since: "2026-11-16" },
-  { id: "str-suez", kind: "strait", name: "Canal de Suez", coord: [32.55, 30.0], status: "open", title: { fr: "Trafic normal (DÉMO)", en: "Normal traffic (DEMO)" }, source: "AIS (démo)", since: "2026-11-01" },
-  { id: "str-malacca", kind: "strait", name: "Détroit de Malacca", coord: [101.5, 2.5], status: "open", title: { fr: "Trafic normal (DÉMO)", en: "Normal traffic (DEMO)" }, source: "AIS (démo)", since: "2026-11-01" },
-  { id: "str-hormuz", kind: "strait", name: "Détroit d'Ormuz", coord: [56.3, 26.6], status: "open", title: { fr: "Trafic normal (DÉMO)", en: "Normal traffic (DEMO)" }, source: "AIS (démo)", since: "2026-11-01" },
-];
-
-export type Entity = Site | Supplier | WorldEvent | Strait;
+export type Country = { id: string; kind: "country"; num: string; name: Txt; coord: LngLat; score: number | null };
+export type Entity = Site | Supplier | WorldEvent | Strait | Infra | Airspace | Satellite | Country;
 
 // Jeu de données client : la démo par défaut, remplacé par un import Excel/CSV.
 export type Dataset = {
@@ -112,8 +92,16 @@ export type Dataset = {
 
 export const DEMO_DATASET: Dataset = { source: "demo", clientName: CLIENT.name, sites, suppliers, flows };
 
-export const entityById = (ds: Dataset, id: string): Entity | undefined =>
-  [...ds.sites, ...ds.suppliers, ...worldEvents, ...straits].find((e) => e.id === id);
+export const entityById = (ds: Dataset, id: string): Entity | undefined => {
+  if (id.startsWith("ctry-")) return countryEntity(id.slice(5));
+  return [...ds.sites, ...ds.suppliers, ...worldEvents, ...straits, ...infra, ...airspaces, ...satellites].find((e) => e.id === id);
+};
 
 export const nodeById = (ds: Dataset, id: string): Site | Supplier | undefined =>
   [...ds.sites, ...ds.suppliers].find((e) => e.id === id);
+
+export function countryEntity(num: string): Country | undefined {
+  const ref = countryRef(num);
+  if (!ref) return undefined;
+  return { id: `ctry-${num}`, kind: "country", num, name: ref.name, coord: ref.coord, score: countryRisk.find((c) => c.num === num)?.score ?? null };
+}

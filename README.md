@@ -43,14 +43,14 @@ src/
 
 ## Ce qui fonctionne
 
-- Globe 3D et vue 2D, zoom, recentrage.
-- 8 couches activables : sites, fournisseurs (rangs 1 à 3), flux logistiques, alertes ; conflits, restrictions export, catastrophes, détroits.
-- Croisement automatique avec un rayon réglable (50 km par défaut) : un fournisseur proche d'un conflit ou situé dans un pays sous restriction passe en critique ; un flux qui traverse un détroit fermé passe en vigilance.
-- Pile d'alertes triée par gravité puis par valeur exposée ; un clic vole vers l'objet et ouvre sa fiche.
-- Fiche d'entité : statut expliqué avec sources, chiffres clés, liens amont/aval, historique des décisions.
-- Simuler : sites touchés, retard estimé, valeur en transit exposée, alternatives classées avec contrôle sanctions ; les flux touchés s'allument sur le globe.
-- Décider : formulaire Tier 2 (décision, motif, alternatives écartées, responsable), enregistré dans un Decision Ledger local.
-- FR/EN, thèmes Signal et Monochrome.
+- Globe 3D et vue 2D, zoom, recentrage, cadrage automatique après import.
+- 12 couches : sites, fournisseurs (rangs 1 à 3), flux logistiques, alertes ; conflits, sanctions et restrictions export, catastrophes, détroits, espaces aériens fermés, infrastructures critiques, spatial, risque pays. Sous-filtres pour les conflits, catastrophes, infrastructures et satellites.
+- Frise temporelle de −30 à +14 jours : les couches Monde et le croisement suivent la date ; bouton pour rejouer les 30 derniers jours. Les dates de démo sont relatives à aujourd'hui.
+- Croisement automatique (rayon réglable, 50 km par défaut) : conflit ou restriction en vigueur → critique ; catastrophe, infrastructure perturbée, détroit fermé sur une route maritime, espace aérien fermé sur une route aérienne, restriction prévue sous 14 jours → vigilance.
+- Brief quotidien « Depuis hier » et pile d'alertes, avec le nombre d'incidents ouverts.
+- Fiche d'entité pour tous les objets : sites, fournisseurs, événements, détroits, infrastructures, espaces aériens, satellites, et variante pays (score de risque, restrictions, événements, votre exposition). Clic sur un pays ou recherche par nom.
+- Actions : Simuler, Décider (Tier 2), Commander (fournisseurs alternatifs « Vendu par », contrôle sanctions, demande sans paiement tracée dans le Decision Ledger), Incident, Briefer (note de situation d'une page, imprimable en PDF).
+- Import Excel/CSV des données client, FR/EN, thèmes Signal et Monochrome.
 
 ## Importer les données d'un client
 
@@ -65,7 +65,9 @@ Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré
 
 ## Limites connues (à traiter ensuite)
 
-- Les couches Monde (conflits, sanctions, catastrophes, détroits) restent des événements de démonstration.
+- Les couches Monde restent des événements de démonstration (lot C : ingestion des vraies sources côté serveur).
+- Decision Ledger, commandes et incidents sont stockés dans le navigateur (lot B : NestJS, PostgreSQL, Keycloak).
+- La barre de recherche n'est pas encore la barre VISION AI en langage naturel (lot D).
 - Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.
 - Le Decision Ledger est stocké dans le navigateur : à remplacer par l'API NestJS + PostgreSQL (RLS) + Keycloak.
 - Pas encore de frise temporelle, ni d'actions Commander / Incident / Briefer, ni de barre VISION AI (la barre actuelle est une recherche locale).

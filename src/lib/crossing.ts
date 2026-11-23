@@ -1,9 +1,11 @@
 // Moteur de croisement « Monde » × « Vos données ».
 // Quand un événement du monde touche un objet du client, l'objet change de statut et une alerte est créée.
 import {
-  nodeById, restrictions, straits, worldEvents,
-  type Dataset, type Flow, type LngLat, type Supplier, type Txt,
+  airspaces, infra, isActive, nodeById, restrictions, straits, worldEvents,
+  type Dataset, type Flow, type LngLat, type Strait, type Supplier, type Txt,
 } from "@/data/demo";
+
+const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export type Status = "nominal" | "caution" | "alert";
 export type Reason = { text: Txt; source: string; since: string; eventId: string };
@@ -22,7 +24,10 @@ export function distanceKm(a: LngLat, b: LngLat): number {
 const rank = (s: Status) => (s === "alert" ? 2 : s === "caution" ? 1 : 0);
 const worst = (a: Status, b: Status): Status => (rank(a) >= rank(b) ? a : b);
 
-export function computeCrossing(ds: Dataset, radiusKm: number) {
+const fmtDay = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const addDays = (iso: string, n: number) => new Date(new Date(`${iso}T12:00:00Z`).getTime() + n * 86_400_000).toISOString().slice(0, 10);
+
+export function computeCrossing(ds: Dataset, radiusKm: number, at: string) {
   const { sites, suppliers, flows } = ds;
   const status = new Map<string, Status>();
   const reasons = new Map<string, Reason[]>();
@@ -36,17 +41,25 @@ export function computeCrossing(ds: Dataset, radiusKm: number) {
   for (const n of [...sites, ...suppliers]) {
     status.set(n.id, "nominal");
     for (const ev of worldEvents) {
+      if (!isActive(ev, at)) continue;
       const d = Math.round(distanceKm(n.coord, ev.coord));
       if (d > radiusKm) continue;
       const s: Status = ev.kind === "conflict" && ev.severity === "high" ? "alert" : "caution";
-      push(n.id, s, {
-        eventId: ev.id, source: ev.source, since: ev.since,
-        text: { fr: `${ev.title.fr} à ${d} km`, en: `${ev.title.en} ${d} km away` },
-      });
+      push(n.id, s, { eventId: ev.id, source: ev.source, since: ev.since, text: { fr: `${ev.title.fr} à ${d} km`, en: `${ev.title.en} ${d} km away` } });
     }
-    if ("countryIso" in n) {
-      for (const rs of restrictions.filter((r) => r.countryIso === n.countryIso)) {
-        push(n.id, "alert", { eventId: rs.id, source: rs.source, since: rs.since, text: rs.title });
+    for (const it of infra) {
+      if (!it.disruptedSince || it.disruptedSince > at) continue;
+      const d = Math.round(distanceKm(n.coord, it.coord));
+      if (d > radiusKm) continue;
+      push(n.id, "caution", { eventId: it.id, source: it.source, since: it.disruptedSince, text: { fr: `${it.name} : ${it.title.fr} à ${d} km`, en: `${it.name}: ${it.title.en} ${d} km away` } });
+    }
+    const iso = "countryIso" in n ? n.countryIso : undefined;
+    if (iso) {
+      for (const rs of restrictions.filter((r) => r.countryIso === iso)) {
+        if (isActive(rs, at)) push(n.id, "alert", { eventId: rs.id, source: rs.source, since: rs.since, text: rs.title });
+        else if (rs.since > at && rs.since <= addDays(at, 14)) {
+          push(n.id, "caution", { eventId: rs.id, source: rs.source, since: rs.since, text: { fr: `${rs.title.fr} — à partir du ${fmtDay(rs.since)}`, en: `${rs.title.en} — from ${fmtDay(rs.since)}` } });
+        }
       }
     }
   }
@@ -55,15 +68,22 @@ export function computeCrossing(ds: Dataset, radiusKm: number) {
     let s: Status = "nominal";
     for (const sid of f.via) {
       const st = straits.find((x) => x.id === sid);
-      if (st?.status === "closed") {
+      if (st && straitClosed(st, at)) {
         s = "caution";
-        push(f.from, "caution", {
-          eventId: st.id, source: st.source, since: st.since,
-          text: { fr: `Route maritime via ${st.name} : passage suspendu`, en: `Sea route via ${st.name}: transit suspended` },
-        });
+        push(f.from, "caution", { eventId: st.id, source: st.source, since: st.closedSince!, text: { fr: `Route maritime via ${st.name} : passage suspendu`, en: `Sea route via ${st.name}: transit suspended` } });
       }
     }
-    flowStatus.set(f.id, worst(s, worst(status.get(f.from) ?? "nominal", "nominal")));
+    if (f.mode === "air") {
+      const path = flowPath(ds, f);
+      for (const a of airspaces) {
+        if (!isActive(a, at)) continue;
+        if (path.some((p, i) => i % 3 === 0 && distanceKm(p, a.coord) <= a.radiusKm)) {
+          s = "caution";
+          push(f.from, "caution", { eventId: a.id, source: a.source, since: a.since, text: { fr: `Route aérienne : ${a.name.fr.toLowerCase()}, détour nécessaire`, en: `Air route: ${a.name.en.toLowerCase()}, detour required` } });
+        }
+      }
+    }
+    flowStatus.set(f.id, worst(s, status.get(f.from) ?? "nominal"));
   }
 
   const alerts: Alert[] = [...status.entries()]
@@ -76,6 +96,8 @@ export function computeCrossing(ds: Dataset, radiusKm: number) {
 
   return { status, reasons, flowStatus, alerts };
 }
+
+export const straitClosed = (st: Strait, at: string) => !!st.closedSince && st.closedSince <= at && (!st.closedUntil || st.closedUntil >= at);
 
 // ── Simulation « Et si cet objet tombe ? » ───────────────────────────────────
 export type SimResult = {
@@ -112,7 +134,7 @@ export function simulateFailure(ds: Dataset, supplierId: string, statusMap: Map<
     .map((a) => ({
       id: a.id, leadDays: a.leadDays, priceIndex: a.priceIndex,
       risk: statusMap.get(a.id) ?? "nominal",
-      sanctionsOk: !restrictions.some((r) => r.countryIso === a.countryIso),
+      sanctionsOk: !restrictions.some((r) => r.countryIso === a.countryIso && isActive(r, todayIso())),
     }))
     .sort((a, b) => rank(a.risk) - rank(b.risk) || a.leadDays - b.leadDays);
 

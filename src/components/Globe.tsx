@@ -69,6 +69,7 @@ export function Globe() {
   const flyTarget = useVision((s) => s.flyTarget);
   const selectedId = useVision((s) => s.selectedId);
   const worldVersion = useVision((s) => s.worldVersion);
+  const aiIds = useVision((s) => s.ai?.result?.entityIds ?? null);
 
   // Création de la carte
   useEffect(() => {
@@ -99,7 +100,7 @@ export function Globe() {
     const map = mapHandle.current;
     if (!ready || !map || map.getSource("sites")) return;
 
-    for (const id of ["conflicts", "catastrophes", "straits", "infra", "satellites", "airspaces", "sites", "suppliers", "flows", "alerts", "sim-flows"]) {
+    for (const id of ["conflicts", "catastrophes", "straits", "infra", "satellites", "airspaces", "sites", "suppliers", "flows", "alerts", "sim-flows", "ai"]) {
       map.addSource(id, { type: "geojson", data: fc([]), promoteId: "id" });
     }
 
@@ -159,6 +160,11 @@ export function Globe() {
       "circle-stroke-color": ["match", ["get", "status"], "alert", C.alert, C.caution], "circle-stroke-width": 1.4,
     } });
 
+    // Objets cités par VISION AI
+    map.addLayer({ id: "ai-ring", type: "circle", source: "ai", paint: {
+      "circle-radius": 15, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": C.signal, "circle-stroke-width": 2, "circle-stroke-opacity": 0.9,
+    } });
+
     // Un seul gestionnaire de clic : objet sous le curseur, sinon le pays (fiche pays).
     const hit = (e: MapMouseEvent) => map.queryRenderedFeatures(e.point, { layers: INTERACTIVE.filter((l) => map.getLayer(l) && map.getLayoutProperty(l, "visibility") !== "none") })[0];
     map.on("click", (e: MapMouseEvent) => {
@@ -206,6 +212,19 @@ export function Globe() {
     set("sim-flows", fc(flows.filter((f) => simIds.has(f.id)).map((f) => line(f.id, flowPath(ds, f), {}))));
   };
   useEffect(pushData, [ready, ds, at, crossing, sim, worldVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Objets cités par VISION AI : anneau et cadrage
+  useEffect(() => {
+    const map = mapHandle.current;
+    if (!ready || !map || !map.getSource("ai")) return;
+    const nodes = (aiIds ?? []).map((id) => nodeById(ds, id)).filter((n): n is NonNullable<typeof n> => !!n);
+    (map.getSource("ai") as GeoJSONSource).setData(fc(nodes.map((n) => pt(n.id, n.coord))));
+    if (nodes.length === 1) map.flyTo({ center: nodes[0].coord, zoom: Math.max(map.getZoom(), 3.6), duration: 1400 });
+    else if (nodes.length > 1) {
+      const lngs = nodes.map((n) => n.coord[0]), lats = nodes.map((n) => n.coord[1]);
+      map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: { top: 260, bottom: 120, left: 320, right: 400 }, maxZoom: 5, duration: 1400 });
+    }
+  }, [ready, aiIds, ds]);
 
   // Visibilité des couches et sous-filtres
   useEffect(() => {

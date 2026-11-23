@@ -2,6 +2,9 @@
 import { create } from "zustand";
 import { DEMO_DATASET, applyWorldSnapshot, type Dataset, type WorldSnapshot } from "@/data/demo";
 import { api, apiEnabled, initBackend, type Me } from "@/lib/backend";
+import { LOCAL_POLICY, type Policy } from "@/data/policy";
+import type { PackId } from "@/data/packs";
+import type { AskResult } from "@/lib/ask";
 
 export type Locale = "fr" | "en";
 export type ThemeMode = "signal" | "mono";
@@ -28,6 +31,14 @@ type State = {
   me: Me | null;
   syncError: string | null;
   worldVersion: number;
+  pack: PackId;
+  policy: Policy;
+  aiModel: string | null;
+  ai: { question: string; loading: boolean; result: AskResult | null; error: string | null } | null;
+  settingsOpen: boolean;
+  setPack: (p: PackId) => void;
+  setAi: (a: State["ai"]) => void;
+  openSettings: (o: boolean) => void;
   worldSources: WorldSnapshot["sources"] | null;
   dataset: Dataset;
   importOpen: boolean;
@@ -79,6 +90,14 @@ export const useVision = create<State>((set, get) => ({
   me: null,
   syncError: null,
   worldVersion: 0,
+  pack: "aero",
+  policy: LOCAL_POLICY,
+  aiModel: null,
+  ai: null,
+  settingsOpen: false,
+  setPack: (pack) => { write("vision.pack", pack); set({ pack }); },
+  setAi: (ai) => set({ ai }),
+  openSettings: (settingsOpen) => set({ settingsOpen }),
   worldSources: null,
   dataset: DEMO_DATASET,
   importOpen: false,
@@ -169,6 +188,7 @@ export async function hydrateFromStorage() {
   useVision.setState({
     locale: read<Locale>("vision.locale", "fr"),
     theme: read<ThemeMode>("vision.theme", "signal"),
+    pack: read<PackId>("vision.pack", "aero"),
   });
   try {
     const b = await initBackend();
@@ -179,7 +199,8 @@ export async function hydrateFromStorage() {
         api<Order[]>("GET", "/orders"),
         api<Incident[]>("GET", "/incidents?status=open"),
       ]);
-      useVision.setState({ backend: "api", me: b.me, dataset: ds ?? DEMO_DATASET, ledger, orders, incidents });
+      const [policy, ai] = await Promise.all([api<Policy>("GET", "/policy"), api<{ configured: boolean; model: string | null }>("GET", "/ai/status")]);
+      useVision.setState({ backend: "api", me: b.me, dataset: ds ?? DEMO_DATASET, ledger, orders, incidents, policy, aiModel: ai.configured ? ai.model : null });
       await loadWorld();
       setInterval(loadWorld, 10 * 60_000);
       return;

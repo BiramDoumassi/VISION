@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { dayIso, infra, nodeById, restrictions, straits, worldEvents, entityById } from "@/data/demo";
 import { entityLabel, useCrossing, useDataset, useTx, STATUS_VAR } from "@/lib/useCrossing";
+import { criticalFamily } from "@/data/packs";
 import { useVision } from "@/store/useVision";
 import { HOME, mapHandle } from "./Globe";
 import { IconClose, IconMinus, IconPlus, IconTarget } from "./icons";
@@ -55,8 +56,11 @@ export function AlertsStack() {
   const tx = useTx();
   const { alerts } = useCrossing();
   const ds = useDataset();
-  const { select, selectedId, incidents } = useVision();
+  const { select, selectedId, incidents, pack } = useVision();
   if (selectedId) return null; // la fiche ouverte occupe la droite
+  const crit = (id: string) => { const n = ds.suppliers.find((s) => s.id === id); return n && criticalFamily(pack, n) ? 1 : 0; };
+  const rank = (s: string) => (s === "alert" ? 2 : 1);
+  const sorted = [...alerts].sort((a, b) => rank(b.status) - rank(a.status) || crit(b.entityId) - crit(a.entityId) || b.exposureKEur - a.exposureKEur);
   const openInc = incidents.filter((i) => i.status === "open").length;
   return (
     <div className="absolute right-3 top-[60px] z-20 flex w-[360px] flex-col gap-2">
@@ -64,7 +68,7 @@ export function AlertsStack() {
       <div className="label text-right">
         {t("count", { count: alerts.length })}{openInc > 0 && <> · <span className="text-caution">{t("incidents", { count: openInc })}</span></>}
       </div>
-      {alerts.slice(0, 3).map((a) => {
+      {sorted.slice(0, 3).map((a) => {
         const n = nodeById(ds, a.entityId);
         if (!n) return null;
         return (

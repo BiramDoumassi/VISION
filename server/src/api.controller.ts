@@ -3,6 +3,8 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { audit, pool, withOrg } from "./db";
 import { importSnapshot, refreshWorld, worldSnapshot } from "./world";
+import { AskIn, aiConfigured, ask } from "./ai";
+import { POLICY, reasonRequired } from "./policy";
 import { Roles, type AuthedRequest, type Principal } from "./auth";
 
 const newId = (p: string) => `${p}-${randomBytes(5).toString("hex").toUpperCase()}`;
@@ -88,6 +90,7 @@ export class ApiController {
   async decide(@Req() req: AuthedRequest, @Body() body: unknown) {
     const p = who(req);
     const d = parse(DecisionIn, body);
+    if (reasonRequired() && !d.reason.trim()) throw new BadRequestException("Politique en vigueur : le motif est obligatoire pour toute décision");
     return withOrg(p.org, async (c) => {
       const id = newId("DL");
       const r = await c.query(
@@ -207,6 +210,24 @@ export class ApiController {
     await withOrg(p.org, (c) => audit(c, p.org, p.sub, "world.import", "world", null, { sources: res }));
     return res;
   }
+
+  // ── VISION AI (consultative) ────────────────────────────────────────────────
+  @Get("ai/status")
+  aiStatus() { return { configured: aiConfigured(), model: aiConfigured() ? process.env.AI_MODEL ?? "mistral-small" : null }; }
+
+  @Post("ai/ask")
+  async aiAsk(@Req() req: AuthedRequest, @Body() body: unknown) {
+    const p = who(req);
+    if (!aiConfigured()) throw new BadRequestException("Aucun modèle VISION AI configuré (AI_BASE_URL)");
+    const input = parse(AskIn, body);
+    const out = await ask(input);
+    await withOrg(p.org, (c) => audit(c, p.org, p.sub, "ai.ask", "ai", null, { question: input.question.slice(0, 200), model: out.model, entities: out.entityIds.length }));
+    return out;
+  }
+
+  // ── Policy Center (lecture) ─────────────────────────────────────────────────
+  @Get("policy")
+  policy() { return POLICY(); }
 
   // ── Journal d'audit (administrateurs) ───────────────────────────────────────
   @Get("audit")

@@ -58,6 +58,11 @@ services:
       WORLD_OFFLINE: ${WORLD_OFFLINE:-false}
       ACLED_EMAIL: ${ACLED_EMAIL:-}
       ACLED_PASSWORD: ${ACLED_PASSWORD:-}
+      # VISION AI (lot D) : modèle open-weight sur site, API compatible /v1/chat/completions (Ollama, vLLM, llama.cpp…).
+      # Vide = pas de modèle ; la barre répond alors avec le moteur de règles.
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_MODEL: ${AI_MODEL:-mistral-small}
+      POLICY_REASON_REQUIRED: "true"
     ports:
       - "4000:4000"
 

@@ -6,7 +6,7 @@
     "worldPartial": "Straits, infrastructure, airspace and satellites: demo"
   },
   "search": {
-    "placeholder": "Search a site, a supplier, a country…",
+    "placeholder": "Search, or ask VISION AI a question…",
     "none": "No results"
   },
   "layers": {
@@ -244,5 +244,27 @@
     "decisions": "Decisions and actions",
     "print": "Print / save as PDF",
     "none": "None."
+  },
+  "ai": {
+    "model": "VISION AI · on-site model {model}",
+    "rules": "VISION AI · rules (no model configured)",
+    "close": "Close",
+    "thinking": "Analysing…",
+    "fallback": "Model unavailable ({error}): rule-based answer.",
+    "advisory": "Suggested by VISION AI, to be checked. No action is executed."
+  },
+  "settings": {
+    "title": "Settings",
+    "pack": "Sector pack",
+    "packHelp": "The pack flags your sector's critical product families in the sheets and puts those suppliers first in alerts.",
+    "policy": "Decision rules",
+    "tier": "Autonomy level: Tier {tier} — human validation before any execution.",
+    "roles": "Roles",
+    "logout": "Sign out",
+    "close": "Close",
+    "account": "Account"
+  },
+  "pack": {
+    "critical": "Critical family · {family}"
   }
 }

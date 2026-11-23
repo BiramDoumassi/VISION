@@ -11,6 +11,7 @@ import {
 import { distanceKm, simulateFailure, straitClosed, type Status } from "@/lib/crossing";
 import { entityLabel, useAt, useCrossing, useDataset, useSimulation, useTx, STATUS_HEX, STATUS_VAR } from "@/lib/useCrossing";
 import { openBrief } from "@/lib/brief";
+import { criticalFamily } from "@/data/packs";
 import { can, useVision } from "@/store/useVision";
 import { IconBell, IconBox, IconBolt, IconClose, IconFactory, IconPlay, IconStamp, IconTarget, IconWave } from "./icons";
 
@@ -117,7 +118,8 @@ function Simulation() {
 // ── Décider ───────────────────────────────────────────────────────────────────
 function DecisionForm({ entityId, defaultRejected }: { entityId: string; defaultRejected: string }) {
   const t = useTranslations("dec");
-  const { recordDecision, openForm } = useVision();
+  const { recordDecision, openForm, policy } = useVision();
+  const reasonRequired = policy.rules.some((r) => r.id === "reason-required");
   const [f, setF] = useState({ decision: "", reason: "", rejected: defaultRejected, owner: "" });
   const [err, setErr] = useState(false);
   const box = useScrollIntoView();
@@ -132,13 +134,13 @@ function DecisionForm({ entityId, defaultRejected }: { entityId: string; default
   return (
     <div ref={box}><Section title={t("title")}>
       {input("decision", t("decision"), true, t("placeholderDecision"))}
-      {input("reason", t("reason"), true)}
+      {input("reason", reasonRequired ? `${t("reason")} *` : t("reason"), true)}
       {input("rejected", t("rejected"))}
       {input("owner", t("owner"))}
       <p className="mb-2 text-[11px] text-muted">{t("tier")}</p>
       {err && <p className="mb-2 text-[11px]" style={{ color: STATUS_VAR.alert }}>{t("required")}</p>}
       <div className="flex gap-2">
-        <button onClick={() => { if (!f.decision.trim() || !f.owner.trim()) { setErr(true); return; } recordDecision({ entityId, ...f }); }}
+        <button onClick={() => { if (!f.decision.trim() || !f.owner.trim() || (reasonRequired && !f.reason.trim())) { setErr(true); return; } recordDecision({ entityId, ...f }); }}
           className="flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 text-[12px] font-semibold text-void" style={{ background: "var(--vision-signal)" }}>
           <IconStamp size={14} />{t("save")}
         </button>
@@ -246,7 +248,7 @@ export function EntityPanel() {
   const t = useTranslations();
   const tu = useTranslations("units");
   const tx = useTx();
-  const { selectedId, select, simulatingId, simulate, form, openForm, ledger, orders, incidents, locale, radiusKm, me } = useVision();
+  const { selectedId, select, simulatingId, simulate, form, openForm, ledger, orders, incidents, locale, radiusKm, me, pack } = useVision();
   const mayDecide = can(me, "decide"), mayAnalyze = can(me, "analyze");
   const { status, reasons } = useCrossing();
   const ds = useDataset();
@@ -341,7 +343,10 @@ export function EntityPanel() {
         <div className="min-w-0 flex-1">
           <div className="truncate font-tight text-[15px] font-semibold">{title}</div>
           <div className="truncate text-[11px] text-muted">{subtitle}</div>
-          <div className="mt-1.5"><StatusPill status={st} label={stLabel} /></div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <StatusPill status={st} label={stLabel} />
+            {sup && (() => { const fam = criticalFamily(pack, sup); return fam ? <span className="rounded-full border border-line px-2 py-0.5 text-[11px] text-ink">{t("pack.critical", { family: tx(fam.label) })}</span> : null; })()}
+          </div>
         </div>
         <button onClick={() => select(null)} aria-label={t("entity.close")} className="text-muted hover:text-ink"><IconClose size={16} /></button>
       </header>

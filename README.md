@@ -54,6 +54,16 @@ L'API alimente les couches Monde depuis des sources publiques, toutes les 30 min
 - L'état de chaque source s'affiche dans le panneau Couches (vert : à jour ; rouge : jamais récupérée).
 - Les analyseurs sont testés sur des échantillons au format documenté (`cd server && npm test`) ; les appels réels n'ont pas pu être faits depuis l'environnement de développement.
 
+### VISION AI, packs et Policy Center (lot D)
+
+- **Barre VISION AI** : taper une question dans la barre du haut (« fournisseurs à risque en Asie », « commandes qui passent par la mer Rouge », « quel fournisseur est le plus exposé ? »). Les objets cités sont entourés sur le globe et cliquables.
+  - Avec `AI_BASE_URL` (serveur) : un modèle open-weight hébergé sur site répond à partir des seules données du client et des couches Monde ; les identifiants inventés par le modèle sont écartés ; chaque question est journalisée.
+  - Sans modèle (ou en mode local) : un moteur de règles répond (statut, rang, région, pays, détroit, produit), et l'indique.
+  - Toujours consultative : aucune action n'est exécutée par VISION AI.
+- **Packs sectoriels** (Réglages, via l'avatar) : Aéronautique ou Défense. Le pack marque les familles de produits critiques dans les fiches et les place en tête des alertes.
+- **Policy Center** (Réglages) : niveau d'autonomie, règles de décision, rôles. Le motif obligatoire est appliqué par l'API (`POLICY_REASON_REQUIRED`).
+- Maquette Figma : le Prompt 52 masque les écrans gelés et corrige les deux écrans qui touchent aux exclusions.
+
 ### Déploiement sur site
 
 `deploy/docker-compose.yml` lance PostgreSQL, Keycloak (realm `vision` importé depuis `deploy/keycloak/vision-realm.json`), l'API et l'interface (nginx).
@@ -117,7 +127,7 @@ Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré
 
 - En mode local (sans serveur), les couches Monde restent des événements de démonstration.
 - Le déploiement Docker et le realm Keycloak n'ont pas pu être lancés dans l'environnement de développement (images inaccessibles) : à valider au premier `docker compose up`. L'API, PostgreSQL/RLS et la vérification des jetons OIDC ont été testés.
-- La barre de recherche n'est pas encore la barre VISION AI en langage naturel (lot D).
+- La barre VISION AI a été testée avec un faux serveur de modèle compatible ; le choix et le dimensionnement du modèle réel (et du GPU) restent à faire.
 - Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.
 - Le Decision Ledger est stocké dans le navigateur : à remplacer par l'API NestJS + PostgreSQL (RLS) + Keycloak.
 - Pas encore de frise temporelle, ni d'actions Commander / Incident / Briefer, ni de barre VISION AI (la barre actuelle est une recherche locale).

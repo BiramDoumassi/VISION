@@ -6,7 +6,7 @@
     "worldPartial": "Détroits, infrastructures, espaces aériens et satellites : démonstration"
   },
   "search": {
-    "placeholder": "Rechercher un site, un fournisseur, un pays…",
+    "placeholder": "Rechercher, ou poser une question à VISION AI…",
     "none": "Aucun résultat"
   },
   "layers": {
@@ -244,5 +244,27 @@
     "decisions": "Décisions et actions",
     "print": "Imprimer / enregistrer en PDF",
     "none": "Aucune."
+  },
+  "ai": {
+    "model": "VISION AI · modèle sur site {model}",
+    "rules": "VISION AI · règles (aucun modèle configuré)",
+    "close": "Fermer",
+    "thinking": "Analyse en cours…",
+    "fallback": "Modèle indisponible ({error}) : réponse calculée par règles.",
+    "advisory": "Proposé par VISION AI, à vérifier. Aucune action n'est exécutée."
+  },
+  "settings": {
+    "title": "Réglages",
+    "pack": "Pack sectoriel",
+    "packHelp": "Le pack signale les familles de produits critiques de votre secteur dans les fiches et place ces fournisseurs en tête des alertes.",
+    "policy": "Règles de décision",
+    "tier": "Niveau d'autonomie : Tier {tier} — validation humaine avant toute exécution.",
+    "roles": "Rôles",
+    "logout": "Se déconnecter",
+    "close": "Fermer",
+    "account": "Compte"
+  },
+  "pack": {
+    "critical": "Famille critique · {family}"
   }
 }

@@ -3,18 +3,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { worldEvents, straits, infra, satellites } from "@/data/demo";
 import { allCountries } from "@/lib/countries";
-import { useCrossing, useDataset, useTx } from "@/lib/useCrossing";
+import { useAt, useCrossing, useDataset, useTx } from "@/lib/useCrossing";
+import { buildContext, looksLikeQuestion, rulesAnswer, type AskResult } from "@/lib/ask";
+import { api } from "@/lib/backend";
 import { useVision } from "@/store/useVision";
-import { logout } from "@/lib/backend";
 import { IconBell, IconSearch, VisionMark } from "./icons";
 
 export function TopBar() {
   const t = useTranslations();
   const tx = useTx();
-  const { alerts } = useCrossing();
+  const crossing = useCrossing();
+  const { alerts } = crossing;
+  const at = useAt();
   const ds = useDataset();
   const { sites, suppliers } = ds;
-  const { locale, setLocale, theme, setTheme, select, me, backend, syncError } = useVision();
+  const { locale, setLocale, theme, setTheme, select, me, syncError, aiModel, setAi, openSettings } = useVision();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
@@ -44,6 +47,20 @@ export function TopBar() {
   }, [q, tx, sites, suppliers]);
 
   const pick = (id: string) => { select(id, true); setQ(""); setOpen(false); };
+
+  // Question à VISION AI : modèle sur site s'il est configuré côté serveur, sinon moteur de règles local.
+  const askAI = async (question: string) => {
+    setOpen(false);
+    setAi({ question, loading: true, result: null, error: null });
+    try {
+      let result: AskResult;
+      if (aiModel) result = await api<AskResult>("POST", "/ai/ask", { question, locale, context: buildContext(ds, crossing, at, tx) });
+      else result = rulesAnswer(question, ds, crossing, locale, tx);
+      setAi({ question, loading: false, result, error: null });
+    } catch (e) {
+      setAi({ question, loading: false, result: rulesAnswer(question, ds, crossing, locale, tx), error: e instanceof Error ? e.message : String(e) });
+    }
+  };
   const seg = (active: boolean) => `px-2 py-0.5 text-[11px] font-semibold tracking-[0.12em] font-mono ${active ? "bg-surface text-ink" : "text-muted hover:text-ink"}`;
   const critical = alerts.filter((a) => a.status === "alert").length;
 
@@ -61,13 +78,17 @@ export function TopBar() {
           <input
             id="vision-search" value={q} onChange={(e) => { setQ(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)}
-            onKeyDown={(e) => { if (e.key === "Enter" && results[0]) pick(results[0].id); if (e.key === "Escape") setOpen(false); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { if (looksLikeQuestion(q) || !results[0]) { if (q.trim().length > 1) askAI(q.trim()); } else pick(results[0].id); }
+              if (e.key === "Escape") { setOpen(false); setAi(null); }
+            }}
             placeholder={t("search.placeholder")} spellCheck={false}
             className="h-full flex-1 bg-transparent text-[12px] text-ink outline-none placeholder:text-muted"
           />
           <span className="num rounded border border-line px-1.5 text-[11px] text-muted">⌘K</span>
         </div>
-        {open && q.trim().length >= 2 && (
+        <AiAnswer />
+        {open && q.trim().length >= 2 && !looksLikeQuestion(q) && (
           <div className="panel absolute left-0 right-0 top-9 overflow-hidden py-1">
             {results.length === 0 && <div className="px-3 py-2 text-[12px] text-muted">{t("search.none")}</div>}
             {results.map((r) => (
@@ -101,11 +122,43 @@ export function TopBar() {
           )}
         </button>
         {syncError && <span className="max-w-[220px] truncate text-[11px]" style={{ color: "var(--vision-alert)" }} title={syncError}>⚠ {syncError}</span>}
-        <button onClick={() => backend === "api" && logout()} title={me ? `${me.name} · ${me.org} · ${me.roles.join(", ")}` : undefined}
+        <button onClick={() => openSettings(true)} title={me ? `${me.name} · ${me.org} · ${me.roles.join(", ")}` : t("settings.title")}
           className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-[11px] font-semibold text-muted">
           {(me?.name ?? "VI").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
         </button>
       </div>
     </header>
+  );
+}
+
+// Réponse de VISION AI, sous la barre : texte, objets cités (cliquables), mode utilisé.
+function AiAnswer() {
+  const t = useTranslations("ai");
+  const ds = useDataset();
+  const { ai, setAi, select, aiModel } = useVision();
+  if (!ai) return null;
+  const nodes = (ai.result?.entityIds ?? []).map((id) => [...ds.sites, ...ds.suppliers].find((n) => n.id === id)).filter((n): n is NonNullable<typeof n> => !!n);
+  return (
+    <div className="panel absolute left-0 right-0 top-9 z-40 px-3 py-2.5">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="label">{ai.result?.mode === "model" ? t("model", { model: ai.result.model ?? aiModel ?? "" }) : t("rules")}</span>
+        <button onClick={() => setAi(null)} className="text-[11px] text-muted hover:text-ink">{t("close")}</button>
+      </div>
+      <div className="mb-1 text-[11px] text-muted">« {ai.question} »</div>
+      {ai.loading ? <p className="text-[12px] text-muted">{t("thinking")}</p> : (
+        <>
+          <p className="text-[12px] leading-relaxed text-ink">{ai.result?.answer}</p>
+          {nodes.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {nodes.slice(0, 12).map((n) => (
+                <button key={n.id} onClick={() => select(n.id, true)} className="rounded border border-line px-2 py-0.5 text-[11px] text-ink hover:border-signal">{n.name}</button>
+              ))}
+            </div>
+          )}
+          {ai.error && <p className="mt-1.5 text-[11px]" style={{ color: "var(--vision-caution)" }}>{t("fallback", { error: ai.error })}</p>}
+          <p className="mt-2 text-[11px] text-muted">{t("advisory")}</p>
+        </>
+      )}
+    </div>
   );
 }

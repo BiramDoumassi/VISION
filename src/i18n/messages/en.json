@@ -1,40 +1,167 @@
 {
-  "app": { "demo": "Demo data", "client": "Client" },
-  "search": { "placeholder": "Search a site, a supplier, a country…", "none": "No results" },
+  "app": {
+    "demo": "Demo data",
+    "client": "Client",
+    "worldDemo": "World layers: demo events"
+  },
+  "search": {
+    "placeholder": "Search a site, a supplier, a country…",
+    "none": "No results"
+  },
   "layers": {
-    "title": "Layers", "world": "World", "yours": "Your data",
-    "conflicts": "Conflicts and tensions", "restrictions": "Sanctions and export restrictions",
-    "catastrophes": "Disasters and climate", "maritime": "Maritime flows and straits",
-    "sites": "Sites and assets", "suppliers": "Suppliers", "flows": "Logistics flows", "alerts": "Alerts and incidents",
+    "title": "Layers",
+    "world": "World",
+    "yours": "Your data",
+    "conflicts": "Conflicts and tensions",
+    "restrictions": "Sanctions and export restrictions",
+    "catastrophes": "Disasters and climate",
+    "maritime": "Maritime flows and straits",
+    "sites": "Sites and assets",
+    "suppliers": "Suppliers",
+    "flows": "Logistics flows",
+    "alerts": "Alerts and incidents",
     "radius": "Crossing radius"
   },
-  "legend": { "title": "Legend", "nominal": "Normal", "caution": "Watch", "alert": "Critical", "closed": "Strait closed" },
-  "alerts": { "title": "Alerts", "count": "{count, plural, =0 {No alerts} one {# active alert} other {# active alerts}}", "exposure": "Exposed: {value}" },
-  "controls": { "globe": "3D", "flat": "2D", "zoomIn": "Zoom in", "zoomOut": "Zoom out", "recenter": "Recenter" },
-  "kind": { "site": "Site", "supplier": "Supplier", "conflict": "Conflict", "catastrophe": "Disaster", "strait": "Strait" },
-  "status": { "nominal": "Normal", "caution": "Watch", "alert": "Critical", "open": "Open", "closed": "Closed" },
+  "legend": {
+    "title": "Legend",
+    "nominal": "Normal",
+    "caution": "Watch",
+    "alert": "Critical",
+    "closed": "Strait closed"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "count": "{count, plural, =0 {No alerts} one {# active alert} other {# active alerts}}",
+    "exposure": "Exposed: {value}"
+  },
+  "controls": {
+    "globe": "3D",
+    "flat": "2D",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "recenter": "Recenter"
+  },
+  "kind": {
+    "site": "Site",
+    "supplier": "Supplier",
+    "conflict": "Conflict",
+    "catastrophe": "Disaster",
+    "strait": "Strait"
+  },
+  "status": {
+    "nominal": "Normal",
+    "caution": "Watch",
+    "alert": "Critical",
+    "open": "Open",
+    "closed": "Closed"
+  },
   "entity": {
-    "why": "Why this status", "whyNominal": "No event affects this object within the crossing radius.",
-    "figures": "Key figures", "links": "Links", "history": "Decision history", "noHistory": "No decision recorded.",
-    "close": "Close", "rank": "Tier {rank}", "since": "since {date}"
+    "why": "Why this status",
+    "whyNominal": "No event affects this object within the crossing radius.",
+    "figures": "Key figures",
+    "links": "Links",
+    "history": "Decision history",
+    "noHistory": "No decision recorded.",
+    "close": "Close",
+    "rank": "Tier {rank}",
+    "since": "since {date}"
   },
   "fig": {
-    "share": "Share of spend", "lead": "Standard lead time", "refs": "Part numbers", "sole": "Sole source",
-    "staff": "Headcount", "lines": "Lines", "inTransit": "Orders in transit", "value": "Annual spend"
+    "share": "Share of spend",
+    "lead": "Standard lead time",
+    "refs": "Part numbers",
+    "sole": "Sole source",
+    "staff": "Headcount",
+    "lines": "Lines",
+    "inTransit": "Orders in transit",
+    "value": "Annual spend"
   },
-  "links": { "feeds": "Supplies", "upstream": "Upstream suppliers", "suppliers": "Direct suppliers", "none": "—" },
-  "action": { "simulate": "Simulate", "decide": "Decide" },
+  "links": {
+    "feeds": "Supplies",
+    "upstream": "Upstream suppliers",
+    "suppliers": "Direct suppliers",
+    "none": "—"
+  },
+  "action": {
+    "simulate": "Simulate",
+    "decide": "Decide"
+  },
   "sim": {
-    "title": "What if this supplier fails?", "sites": "Sites affected", "delay": "Estimated delay", "exposed": "In-transit value exposed",
-    "alternatives": "Ranked alternatives", "noAlt": "No known alternative: sourcing needed.",
-    "lead": "Lead", "price": "Price", "risk": "Risk", "sanctions": "Sanctions", "ok": "OK", "ko": "Blocked",
-    "readonly": "Read-only simulation, no real effect.", "close": "Close simulation", "next": "Next step: decide"
+    "title": "What if this supplier fails?",
+    "sites": "Sites affected",
+    "delay": "Estimated delay",
+    "exposed": "In-transit value exposed",
+    "alternatives": "Ranked alternatives",
+    "noAlt": "No known alternative: sourcing needed.",
+    "lead": "Lead",
+    "price": "Price",
+    "risk": "Risk",
+    "sanctions": "Sanctions",
+    "ok": "OK",
+    "ko": "Blocked",
+    "readonly": "Read-only simulation, no real effect.",
+    "close": "Close simulation",
+    "next": "Next step: decide"
   },
   "dec": {
-    "title": "Record a decision", "decision": "Decision", "reason": "Rationale", "rejected": "Alternatives rejected", "owner": "Owner",
-    "save": "Sign and record", "cancel": "Cancel", "tier": "Tier 2 — human validation required. Logged in the Decision Ledger.",
-    "placeholderDecision": "e.g. dual-source with Carbon Saxony", "required": "Decision and owner are required."
+    "title": "Record a decision",
+    "decision": "Decision",
+    "reason": "Rationale",
+    "rejected": "Alternatives rejected",
+    "owner": "Owner",
+    "save": "Sign and record",
+    "cancel": "Cancel",
+    "tier": "Tier 2 — human validation required. Logged in the Decision Ledger.",
+    "placeholderDecision": "e.g. dual-source with Carbon Saxony",
+    "required": "Decision and owner are required."
   },
-  "units": { "days": "{n} d", "keur": "€{n}k", "pct": "{n}%" },
-  "theme": { "signal": "SIG", "mono": "MONO" }
+  "units": {
+    "days": "{n} d",
+    "keur": "€{n}k",
+    "pct": "{n}%"
+  },
+  "theme": {
+    "signal": "SIG",
+    "mono": "MONO"
+  },
+  "import": {
+    "title": "Import your data",
+    "intro": "Drop your Excel or CSV file: your sites and suppliers appear on the globe, crossed with the World layers.",
+    "drop": "Drag an .xlsx or .csv file here, or click to choose",
+    "reading": "Reading and geolocating…",
+    "template": "Download the Excel template",
+    "privacy": "The file is read on your device. Nothing is sent over the Internet.",
+    "client": "Client name",
+    "sites": "Sites",
+    "suppliers": "Suppliers",
+    "flows": "Flows",
+    "precision": "Location",
+    "exact": "coordinates",
+    "city": "city",
+    "country": "country (approx.)",
+    "issues": "To check",
+    "more": "+ {n} more",
+    "noIssue": "No issues found.",
+    "apply": "Show on the globe",
+    "cancel": "Cancel",
+    "another": "Choose another file",
+    "source": "Source",
+    "demo": "Demo",
+    "imported": "Imported",
+    "import": "Import",
+    "backToDemo": "Back to demo",
+    "row": "{sheet}, row {row}",
+    "code": {
+      "noName": "Missing name",
+      "noCountry": "Missing country: row skipped",
+      "unknownCountry": "Unknown country “{value}”: row skipped",
+      "cityNotFound": "City “{value}” not found: placed at country centre",
+      "badRank": "Invalid tier “{value}”: clamped to 1–3",
+      "unknownTarget": "“{value}” (Supplies column) not in file: flow skipped",
+      "unknownAlternative": "Alternative “{value}” not in file",
+      "noData": "No usable rows: check headers (Name, Country…)",
+      "badFile": "Unreadable file: use .xlsx or .csv",
+      "duplicate": "“{value}” duplicated: second row skipped"
+    }
+  }
 }

@@ -2,8 +2,8 @@
 // Fiche d'entité standard (Prompt 51) : en-tête, pourquoi ce statut, chiffres clés, liens, historique, actions.
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { entityById, flows, nodeById, suppliers, type Site, type Supplier } from "@/data/demo";
-import { useCrossing, useSimulation, useTx, STATUS_VAR } from "@/lib/useCrossing";
+import { entityById, nodeById, type Site, type Supplier } from "@/data/demo";
+import { useCrossing, useDataset, useSimulation, useTx, STATUS_VAR } from "@/lib/useCrossing";
 import type { Status } from "@/lib/crossing";
 import { useVision } from "@/store/useVision";
 import { IconBox, IconBolt, IconClose, IconFactory, IconPlay, IconStamp, IconWave } from "./icons";
@@ -38,7 +38,8 @@ function StatusPill({ status, label }: { status: Status; label: string }) {
 function LinkRow({ id }: { id: string }) {
   const { status } = useCrossing();
   const select = useVision((s) => s.select);
-  const n = nodeById(id);
+  const ds = useDataset();
+  const n = nodeById(ds, id);
   if (!n) return null;
   const s = status.get(id) ?? "nominal";
   return (
@@ -55,6 +56,7 @@ function Simulation() {
   const tu = useTranslations("units");
   const ts = useTranslations("status");
   const sim = useSimulation();
+  const ds = useDataset();
   const { simulate, openDecision } = useVision();
   if (!sim) return null;
   return (
@@ -77,7 +79,7 @@ function Simulation() {
             {sim.alternatives.map((a, i) => (
               <tr key={a.id} className="border-t border-line">
                 <td className="num py-1.5 text-muted">{i + 1}</td>
-                <td className="pr-2 text-ink">{nodeById(a.id)?.name}</td>
+                <td className="pr-2 text-ink">{nodeById(ds, a.id)?.name}</td>
                 <td className="num">{tu("days", { n: a.leadDays })}</td>
                 <td className="num">{a.priceIndex}</td>
                 <td><span style={{ color: STATUS_VAR[a.risk] }}>{ts(a.risk)}</span></td>
@@ -138,7 +140,9 @@ export function EntityPanel() {
   const tx = useTx();
   const { selectedId, select, simulatingId, simulate, decisionOpen, openDecision, ledger, locale } = useVision();
   const { status, reasons } = useCrossing();
-  const e = selectedId ? entityById(selectedId) : undefined;
+  const ds = useDataset();
+  const { suppliers, flows } = ds;
+  const e = selectedId ? entityById(ds, selectedId) : undefined;
   if (!e) return null;
 
   const isNode = e.kind === "site" || e.kind === "supplier";
@@ -176,7 +180,7 @@ export function EntityPanel() {
             ? <p className="text-[12px] text-muted">{t("entity.whyNominal")}</p>
             : <ul className="flex flex-col gap-2">{why.map((r, i) => (
                 <li key={i} className="text-[12px] leading-snug">
-                  <button className="text-left text-ink hover:underline" onClick={() => entityById(r.eventId) && select(r.eventId, true)}>{tx(r.text)}</button>
+                  <button className="text-left text-ink hover:underline" onClick={() => entityById(ds, r.eventId) && select(r.eventId, true)}>{tx(r.text)}</button>
                   <div className="text-[11px] text-muted">{r.source} · {t("entity.since", { date: fmtDate(r.since) })}</div>
                 </li>))}</ul>)
             : <p className="text-[12px] leading-snug">{tx(e.title)}<span className="block text-[11px] text-muted">{"source" in e ? e.source : ""} · {t("entity.since", { date: fmtDate(e.since) })}</span></p>}
@@ -215,7 +219,7 @@ export function EntityPanel() {
 
         {sup && simulatingId === sup.id && <Simulation />}
         {decisionOpen && isNode && (
-          <DecisionForm entityId={e.id} defaultRejected={sup ? sup.alternatives.slice(1).map((id) => nodeById(id)?.name).join(", ") : ""} />
+          <DecisionForm entityId={e.id} defaultRejected={sup ? sup.alternatives.slice(1).map((id) => nodeById(ds, id)?.name).join(", ") : ""} />
         )}
 
         {isNode && (

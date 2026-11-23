@@ -2,7 +2,7 @@
 // Contrôles carte (bas droite), légende (bas gauche) et pile d'alertes (haut droite).
 import { useTranslations } from "next-intl";
 import { nodeById } from "@/data/demo";
-import { useCrossing, useTx, STATUS_VAR } from "@/lib/useCrossing";
+import { useCrossing, useDataset, useTx, STATUS_VAR } from "@/lib/useCrossing";
 import { useVision } from "@/store/useVision";
 import { HOME, mapHandle } from "./Globe";
 import { IconMinus, IconPlus, IconTarget } from "./icons";
@@ -52,6 +52,7 @@ export function AlertsStack() {
   const tu = useTranslations("units");
   const tx = useTx();
   const { alerts } = useCrossing();
+  const ds = useDataset();
   const { select, selectedId } = useVision();
   if (selectedId) return null; // la fiche ouverte occupe la droite
   return (
@@ -59,7 +60,8 @@ export function AlertsStack() {
       <div className="label mb-1.5 text-right">{t("count", { count: alerts.length })}</div>
       <div className="flex flex-col gap-2">
         {alerts.slice(0, 3).map((a) => {
-          const n = nodeById(a.entityId)!;
+          const n = nodeById(ds, a.entityId);
+          if (!n) return null;
           return (
             <button key={a.id} onClick={() => select(a.entityId, true)} className="panel flex overflow-hidden text-left hover:border-muted">
               <span className="w-1 shrink-0" style={{ background: STATUS_VAR[a.status] }} />

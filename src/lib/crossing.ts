@@ -1,8 +1,8 @@
 // Moteur de croisement « Monde » × « Vos données ».
 // Quand un événement du monde touche un objet du client, l'objet change de statut et une alerte est créée.
 import {
-  flows, nodeById, restrictions, sites, straits, suppliers, worldEvents,
-  type Flow, type LngLat, type Supplier, type Txt,
+  nodeById, restrictions, straits, worldEvents,
+  type Dataset, type Flow, type LngLat, type Supplier, type Txt,
 } from "@/data/demo";
 
 export type Status = "nominal" | "caution" | "alert";
@@ -22,7 +22,8 @@ export function distanceKm(a: LngLat, b: LngLat): number {
 const rank = (s: Status) => (s === "alert" ? 2 : s === "caution" ? 1 : 0);
 const worst = (a: Status, b: Status): Status => (rank(a) >= rank(b) ? a : b);
 
-export function computeCrossing(radiusKm: number) {
+export function computeCrossing(ds: Dataset, radiusKm: number) {
+  const { sites, suppliers, flows } = ds;
   const status = new Map<string, Status>();
   const reasons = new Map<string, Reason[]>();
   const flowStatus = new Map<string, Status>();
@@ -86,7 +87,8 @@ export type SimResult = {
   alternatives: { id: string; leadDays: number; priceIndex: number; risk: Status; sanctionsOk: boolean }[];
 };
 
-export function simulateFailure(supplierId: string, statusMap: Map<string, Status>): SimResult | null {
+export function simulateFailure(ds: Dataset, supplierId: string, statusMap: Map<string, Status>): SimResult | null {
+  const { suppliers, flows } = ds;
   const sup = suppliers.find((s) => s.id === supplierId);
   if (!sup) return null;
 
@@ -105,7 +107,7 @@ export function simulateFailure(supplierId: string, statusMap: Map<string, Statu
   const exposedKEur = impactedFlows.reduce((a, id) => a + (flows.find((f) => f.id === id)?.valueKEur ?? 0), 0);
 
   const alternatives = sup.alternatives
-    .map((id) => nodeById(id) as Supplier | undefined)
+    .map((id) => nodeById(ds, id) as Supplier | undefined)
     .filter((x): x is Supplier => !!x)
     .map((a) => ({
       id: a.id, leadDays: a.leadDays, priceIndex: a.priceIndex,
@@ -140,11 +142,11 @@ function greatCircle(a: LngLat, b: LngLat, steps = 48): LngLat[] {
   return pts;
 }
 
-export function flowPath(f: Flow): LngLat[] {
-  const from = nodeById(f.from)?.coord;
-  const to = nodeById(f.to)?.coord;
+export function flowPath(ds: Dataset, f: Flow): LngLat[] {
+  const from = nodeById(ds, f.from)?.coord;
+  const to = nodeById(ds, f.to)?.coord;
   if (!from || !to) return [];
-  const stops: LngLat[] = [from, ...f.via.map((id) => straits.find((s) => s.id === id)!.coord), to];
+  const stops: LngLat[] = [from, ...f.via.map((id) => straits.find((s) => s.id === id)?.coord).filter((c): c is LngLat => !!c), to];
   const out: LngLat[] = [];
   for (let i = 0; i < stops.length - 1; i++) out.push(...greatCircle(stops[i], stops[i + 1]).slice(i === 0 ? 0 : 1));
   return out;

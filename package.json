@@ -4,13 +4,13 @@
   "private": true,
   "description": "VISION — globe unifié (Prompt 51). Socle Next.js export statique.",
   "scripts": {
-    "world": "node scripts/build-world.mjs",
-    "predev": "node scripts/build-world.mjs",
+    "predev": "npm run refdata",
     "dev": "next dev",
-    "prebuild": "node scripts/build-world.mjs",
+    "prebuild": "npm run refdata",
     "build": "next build",
     "start": "npx serve out",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "refdata": "node scripts/build-world.mjs && node scripts/build-refdata.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.0",
@@ -21,6 +21,7 @@
     "next-intl": "^4.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "read-excel-file": "^9.3.20",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -29,9 +30,12 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "all-the-cities": "^3.1.0",
+    "i18n-iso-countries": "^7.14.0",
     "tailwindcss": "^4.1.0",
     "topojson-client": "^3.1.0",
     "typescript": "^5.7.0",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "^2.0.2",
+    "write-excel-file": "^4.1.1"
   }
 }

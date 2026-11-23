@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CLIENT, sites, suppliers, worldEvents, straits } from "@/data/demo";
-import { useCrossing, useTx } from "@/lib/useCrossing";
+import { worldEvents, straits } from "@/data/demo";
+import { useCrossing, useDataset, useTx } from "@/lib/useCrossing";
 import { useVision } from "@/store/useVision";
 import { IconBell, IconSearch, VisionMark } from "./icons";
 
@@ -10,6 +10,8 @@ export function TopBar() {
   const t = useTranslations();
   const tx = useTx();
   const { alerts } = useCrossing();
+  const ds = useDataset();
+  const { sites, suppliers } = ds;
   const { locale, setLocale, theme, setTheme, select } = useVision();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -34,7 +36,7 @@ export function TopBar() {
       ...straits.map((x) => ({ id: x.id, label: x.name, sub: tx(x.title), hay: x.name })),
     ];
     return pool.filter((p) => p.hay.toLowerCase().includes(s)).slice(0, 7);
-  }, [q, tx]);
+  }, [q, tx, sites, suppliers]);
 
   const pick = (id: string) => { select(id, true); setQ(""); setOpen(false); };
   const seg = (active: boolean) => `px-2 py-0.5 text-[11px] font-semibold tracking-[0.12em] font-mono ${active ? "bg-surface text-ink" : "text-muted hover:text-ink"}`;
@@ -45,7 +47,7 @@ export function TopBar() {
       <div className="flex items-center gap-2.5">
         <VisionMark />
         <span className="font-tight text-[13px] font-bold tracking-[0.2em]">VISION</span>
-        <span className="label hidden lg:inline">· {CLIENT.name}</span>
+        <span className="label hidden lg:inline">· {ds.clientName}</span>
       </div>
 
       <div className="relative mx-auto w-[560px] max-w-[46vw]">

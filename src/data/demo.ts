@@ -99,8 +99,21 @@ export const straits: Strait[] = [
 
 export type Entity = Site | Supplier | WorldEvent | Strait;
 
-export const entityById = (id: string): Entity | undefined =>
-  [...sites, ...suppliers, ...worldEvents, ...straits].find((e) => e.id === id);
+// Jeu de données client : la démo par défaut, remplacé par un import Excel/CSV.
+export type Dataset = {
+  source: "demo" | "import";
+  clientName: string;
+  fileName?: string;
+  importedAt?: string;
+  sites: Site[];
+  suppliers: Supplier[];
+  flows: Flow[];
+};
 
-export const nodeById = (id: string): Site | Supplier | undefined =>
-  [...sites, ...suppliers].find((e) => e.id === id);
+export const DEMO_DATASET: Dataset = { source: "demo", clientName: CLIENT.name, sites, suppliers, flows };
+
+export const entityById = (ds: Dataset, id: string): Entity | undefined =>
+  [...ds.sites, ...ds.suppliers, ...worldEvents, ...straits].find((e) => e.id === id);
+
+export const nodeById = (ds: Dataset, id: string): Site | Supplier | undefined =>
+  [...ds.sites, ...ds.suppliers].find((e) => e.id === id);

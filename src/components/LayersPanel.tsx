@@ -1,6 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { useVision, type LayerId } from "@/store/useVision";
+import { DEMO_DATASET } from "@/data/demo";
 
 const WORLD: LayerId[] = ["conflicts", "restrictions", "catastrophes", "maritime"];
 const YOURS: LayerId[] = ["sites", "suppliers", "flows", "alerts"];
@@ -19,7 +20,8 @@ function Toggle({ on }: { on: boolean }) {
 
 export function LayersPanel() {
   const t = useTranslations("layers");
-  const { layers, toggleLayer, radiusKm } = useVision();
+  const ti = useTranslations("import");
+  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset } = useVision();
 
   const group = (title: string, ids: LayerId[]) => (
     <div className="mb-3">
@@ -37,6 +39,19 @@ export function LayersPanel() {
   return (
     <aside className="panel absolute left-3 top-[60px] z-20 w-[280px] p-3">
       <div className="mb-3 font-tight text-[12px] font-semibold tracking-[0.14em]">{t("title").toUpperCase()}</div>
+      <div className="mb-3 rounded border border-line bg-void px-2.5 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="label">{ti("source")} · {dataset.source === "demo" ? ti("demo") : ti("imported")}</div>
+            <div className="truncate text-[12px] text-ink">{dataset.clientName}</div>
+            <div className="num text-[11px] text-muted">{dataset.sites.length} {ti("sites").toLowerCase()} · {dataset.suppliers.length} {ti("suppliers").toLowerCase()}</div>
+          </div>
+          <button onClick={() => openImport(true)} className="shrink-0 rounded border px-2.5 py-1 text-[12px] font-medium text-signal" style={{ borderColor: "color-mix(in srgb, var(--vision-signal) 40%, transparent)" }}>{ti("import")}</button>
+        </div>
+        {dataset.source === "import" && (
+          <button onClick={() => setDataset(DEMO_DATASET)} className="mt-1.5 text-[11px] text-muted hover:text-ink hover:underline">{ti("backToDemo")}</button>
+        )}
+      </div>
       {group(t("yours"), YOURS)}
       {group(t("world"), WORLD)}
       <div className="border-t border-line px-1 pt-3">

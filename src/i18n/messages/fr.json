@@ -1,40 +1,167 @@
 {
-  "app": { "demo": "Données de démonstration", "client": "Client" },
-  "search": { "placeholder": "Rechercher un site, un fournisseur, un pays…", "none": "Aucun résultat" },
+  "app": {
+    "demo": "Données de démonstration",
+    "client": "Client",
+    "worldDemo": "Couches Monde : événements de démonstration"
+  },
+  "search": {
+    "placeholder": "Rechercher un site, un fournisseur, un pays…",
+    "none": "Aucun résultat"
+  },
   "layers": {
-    "title": "Couches", "world": "Monde", "yours": "Vos données",
-    "conflicts": "Conflits et tensions", "restrictions": "Sanctions et restrictions export",
-    "catastrophes": "Catastrophes et climat", "maritime": "Flux maritimes et détroits",
-    "sites": "Sites et actifs", "suppliers": "Fournisseurs", "flows": "Flux logistiques", "alerts": "Alertes et incidents",
+    "title": "Couches",
+    "world": "Monde",
+    "yours": "Vos données",
+    "conflicts": "Conflits et tensions",
+    "restrictions": "Sanctions et restrictions export",
+    "catastrophes": "Catastrophes et climat",
+    "maritime": "Flux maritimes et détroits",
+    "sites": "Sites et actifs",
+    "suppliers": "Fournisseurs",
+    "flows": "Flux logistiques",
+    "alerts": "Alertes et incidents",
     "radius": "Rayon de croisement"
   },
-  "legend": { "title": "Légende", "nominal": "Normal", "caution": "Vigilance", "alert": "Critique", "closed": "Détroit fermé" },
-  "alerts": { "title": "Alertes", "count": "{count, plural, =0 {Aucune alerte} one {# alerte active} other {# alertes actives}}", "exposure": "Exposé : {value}" },
-  "controls": { "globe": "3D", "flat": "2D", "zoomIn": "Zoom avant", "zoomOut": "Zoom arrière", "recenter": "Recentrer" },
-  "kind": { "site": "Site", "supplier": "Fournisseur", "conflict": "Conflit", "catastrophe": "Catastrophe", "strait": "Détroit" },
-  "status": { "nominal": "Normal", "caution": "Vigilance", "alert": "Critique", "open": "Ouvert", "closed": "Fermé" },
+  "legend": {
+    "title": "Légende",
+    "nominal": "Normal",
+    "caution": "Vigilance",
+    "alert": "Critique",
+    "closed": "Détroit fermé"
+  },
+  "alerts": {
+    "title": "Alertes",
+    "count": "{count, plural, =0 {Aucune alerte} one {# alerte active} other {# alertes actives}}",
+    "exposure": "Exposé : {value}"
+  },
+  "controls": {
+    "globe": "3D",
+    "flat": "2D",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "recenter": "Recentrer"
+  },
+  "kind": {
+    "site": "Site",
+    "supplier": "Fournisseur",
+    "conflict": "Conflit",
+    "catastrophe": "Catastrophe",
+    "strait": "Détroit"
+  },
+  "status": {
+    "nominal": "Normal",
+    "caution": "Vigilance",
+    "alert": "Critique",
+    "open": "Ouvert",
+    "closed": "Fermé"
+  },
   "entity": {
-    "why": "Pourquoi ce statut", "whyNominal": "Aucun événement ne touche cet objet dans le rayon de croisement.",
-    "figures": "Chiffres clés", "links": "Liens", "history": "Historique des décisions", "noHistory": "Aucune décision enregistrée.",
-    "close": "Fermer", "rank": "Rang {rank}", "since": "depuis le {date}"
+    "why": "Pourquoi ce statut",
+    "whyNominal": "Aucun événement ne touche cet objet dans le rayon de croisement.",
+    "figures": "Chiffres clés",
+    "links": "Liens",
+    "history": "Historique des décisions",
+    "noHistory": "Aucune décision enregistrée.",
+    "close": "Fermer",
+    "rank": "Rang {rank}",
+    "since": "depuis le {date}"
   },
   "fig": {
-    "share": "Part des achats", "lead": "Délai standard", "refs": "Références", "sole": "Source unique",
-    "staff": "Effectif", "lines": "Lignes", "inTransit": "Commandes en transit", "value": "Achats annuels"
+    "share": "Part des achats",
+    "lead": "Délai standard",
+    "refs": "Références",
+    "sole": "Source unique",
+    "staff": "Effectif",
+    "lines": "Lignes",
+    "inTransit": "Commandes en transit",
+    "value": "Achats annuels"
   },
-  "links": { "feeds": "Approvisionne", "upstream": "Fournisseurs amont", "suppliers": "Fournisseurs directs", "none": "—" },
-  "action": { "simulate": "Simuler", "decide": "Décider" },
+  "links": {
+    "feeds": "Approvisionne",
+    "upstream": "Fournisseurs amont",
+    "suppliers": "Fournisseurs directs",
+    "none": "—"
+  },
+  "action": {
+    "simulate": "Simuler",
+    "decide": "Décider"
+  },
   "sim": {
-    "title": "Et si ce fournisseur tombe ?", "sites": "Sites touchés", "delay": "Retard estimé", "exposed": "Valeur en transit exposée",
-    "alternatives": "Alternatives classées", "noAlt": "Aucune alternative connue : à sourcer.",
-    "lead": "Délai", "price": "Prix", "risk": "Risque", "sanctions": "Sanctions", "ok": "OK", "ko": "Bloqué",
-    "readonly": "Simulation en lecture seule, aucun effet réel.", "close": "Fermer la simulation", "next": "Étape suivante : décider"
+    "title": "Et si ce fournisseur tombe ?",
+    "sites": "Sites touchés",
+    "delay": "Retard estimé",
+    "exposed": "Valeur en transit exposée",
+    "alternatives": "Alternatives classées",
+    "noAlt": "Aucune alternative connue : à sourcer.",
+    "lead": "Délai",
+    "price": "Prix",
+    "risk": "Risque",
+    "sanctions": "Sanctions",
+    "ok": "OK",
+    "ko": "Bloqué",
+    "readonly": "Simulation en lecture seule, aucun effet réel.",
+    "close": "Fermer la simulation",
+    "next": "Étape suivante : décider"
   },
   "dec": {
-    "title": "Enregistrer une décision", "decision": "Décision", "reason": "Motif", "rejected": "Alternatives écartées", "owner": "Responsable",
-    "save": "Signer et enregistrer", "cancel": "Annuler", "tier": "Tier 2 — validation humaine obligatoire. Tracé dans le Decision Ledger.",
-    "placeholderDecision": "Ex. : doubler la source avec Carbon Saxony", "required": "Décision et responsable obligatoires."
+    "title": "Enregistrer une décision",
+    "decision": "Décision",
+    "reason": "Motif",
+    "rejected": "Alternatives écartées",
+    "owner": "Responsable",
+    "save": "Signer et enregistrer",
+    "cancel": "Annuler",
+    "tier": "Tier 2 — validation humaine obligatoire. Tracé dans le Decision Ledger.",
+    "placeholderDecision": "Ex. : doubler la source avec Carbon Saxony",
+    "required": "Décision et responsable obligatoires."
   },
-  "units": { "days": "{n} j", "keur": "{n} k€", "pct": "{n} %" },
-  "theme": { "signal": "SIG", "mono": "MONO" }
+  "units": {
+    "days": "{n} j",
+    "keur": "{n} k€",
+    "pct": "{n} %"
+  },
+  "theme": {
+    "signal": "SIG",
+    "mono": "MONO"
+  },
+  "import": {
+    "title": "Importer vos données",
+    "intro": "Déposez votre fichier Excel ou CSV : vos sites et vos fournisseurs apparaissent sur le globe, croisés avec les couches Monde.",
+    "drop": "Glissez un fichier .xlsx ou .csv ici, ou cliquez pour choisir",
+    "reading": "Lecture et géolocalisation…",
+    "template": "Télécharger le modèle Excel",
+    "privacy": "Le fichier est lu sur votre poste. Rien n'est envoyé sur Internet.",
+    "client": "Nom du client",
+    "sites": "Sites",
+    "suppliers": "Fournisseurs",
+    "flows": "Flux",
+    "precision": "Localisation",
+    "exact": "coordonnées",
+    "city": "ville",
+    "country": "pays (approx.)",
+    "issues": "Points à vérifier",
+    "more": "+ {n} autres",
+    "noIssue": "Aucun problème détecté.",
+    "apply": "Afficher sur le globe",
+    "cancel": "Annuler",
+    "another": "Choisir un autre fichier",
+    "source": "Source",
+    "demo": "Démo",
+    "imported": "Importé",
+    "import": "Importer",
+    "backToDemo": "Revenir à la démo",
+    "row": "{sheet}, ligne {row}",
+    "code": {
+      "noName": "Nom manquant",
+      "noCountry": "Pays manquant : ligne ignorée",
+      "unknownCountry": "Pays non reconnu « {value} » : ligne ignorée",
+      "cityNotFound": "Ville « {value} » introuvable : placé au centre du pays",
+      "badRank": "Rang « {value} » invalide : ramené entre 1 et 3",
+      "unknownTarget": "« {value} » (colonne Approvisionne) absent du fichier : flux ignoré",
+      "unknownAlternative": "Alternative « {value} » absente du fichier",
+      "noData": "Aucune ligne exploitable : vérifiez les en-têtes (Nom, Pays…)",
+      "badFile": "Fichier illisible : utilisez .xlsx ou .csv",
+      "duplicate": "« {value} » en double : seconde ligne ignorée"
+    }
+  }
 }

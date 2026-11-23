@@ -1,5 +1,6 @@
 "use client";
 import { create } from "zustand";
+import { DEMO_DATASET, type Dataset } from "@/data/demo";
 
 export type Locale = "fr" | "en";
 export type ThemeMode = "signal" | "mono";
@@ -13,6 +14,8 @@ export type Decision = {
 };
 
 type State = {
+  dataset: Dataset;
+  importOpen: boolean;
   locale: Locale;
   theme: ThemeMode;
   projection: "globe" | "mercator";
@@ -31,6 +34,8 @@ type State = {
   simulate: (id: string | null) => void;
   openDecision: (open: boolean) => void;
   recordDecision: (d: Omit<Decision, "id" | "at">) => void;
+  setDataset: (ds: Dataset) => void;
+  openImport: (open: boolean) => void;
 };
 
 // Stockage navigateur : simple confort par utilisateur, jamais une source de vérité.
@@ -41,6 +46,8 @@ const read = <T,>(key: string, fallback: T): T => {
 const write = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* stockage indisponible */ } };
 
 export const useVision = create<State>((set, get) => ({
+  dataset: DEMO_DATASET,
+  importOpen: false,
   locale: "fr",
   theme: "signal",
   projection: "globe",
@@ -70,6 +77,13 @@ export const useVision = create<State>((set, get) => ({
     write("vision.ledger", ledger);
     set({ ledger, decisionOpen: false });
   },
+  // Les données importées restent sur le poste (stockage du navigateur), jamais envoyées sur le réseau.
+  setDataset: (dataset) => {
+    if (dataset.source === "import") write("vision.dataset", dataset);
+    else { try { localStorage.removeItem("vision.dataset"); } catch { /* stockage indisponible */ } }
+    set({ dataset, selectedId: null, simulatingId: null, decisionOpen: false, importOpen: false });
+  },
+  openImport: (importOpen) => set({ importOpen }),
 }));
 
 export function hydrateFromStorage() {
@@ -77,5 +91,6 @@ export function hydrateFromStorage() {
     locale: read<Locale>("vision.locale", "fr"),
     theme: read<ThemeMode>("vision.theme", "signal"),
     ledger: read<Decision[]>("vision.ledger", []),
+    dataset: read<Dataset>("vision.dataset", DEMO_DATASET),
   });
 }

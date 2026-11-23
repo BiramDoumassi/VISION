@@ -52,9 +52,26 @@ src/
 - Décider : formulaire Tier 2 (décision, motif, alternatives écartées, responsable), enregistré dans un Decision Ledger local.
 - FR/EN, thèmes Signal et Monochrome.
 
+## Importer les données d'un client
+
+Bouton **Importer** dans le panneau Couches. Formats : `.xlsx` (onglets « Sites » et « Fournisseurs ») ou `.csv` (`;` ou `,`).
+Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré par `scripts/build-refdata.mjs`).
+
+- Colonnes obligatoires : **Nom**, **Pays**. Conseillées : Ville, Rang, Produit, Part des achats, Délai, Approvisionne.
+- Géolocalisation, dans cet ordre : Latitude/Longitude si renseignées → ville (référentiel GeoNames, villes de 5 000 habitants et plus) → centre du pays (signalé comme approximatif).
+- « Approvisionne » trace les flux (noms séparés par `;`) ; « Alternatives » alimente la simulation.
+- Un rapport liste les lignes ignorées ou approximatives avant l'affichage.
+- Le fichier est lu dans le navigateur et conservé localement ; rien n'est envoyé sur le réseau. « Revenir à la démo » efface l'import.
+
 ## Limites connues (à traiter ensuite)
 
-- Données entièrement fictives ; aucun connecteur ERP ni import Excel.
+- Les couches Monde (conflits, sanctions, catastrophes, détroits) restent des événements de démonstration.
+- Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.
 - Le Decision Ledger est stocké dans le navigateur : à remplacer par l'API NestJS + PostgreSQL (RLS) + Keycloak.
 - Pas encore de frise temporelle, ni d'actions Commander / Incident / Briefer, ni de barre VISION AI (la barre actuelle est une recherche locale).
 - Fond de carte 1:110m (pays) : suffisant pour la démo, à remplacer par des tuiles vectorielles auto-hébergées pour le zoom fin.
+
+## Attributions
+
+- Fond de carte : Natural Earth (domaine public), via `world-atlas`.
+- Villes : GeoNames (CC BY 4.0), via `all-the-cities`. Noms de pays : `i18n-iso-countries`.

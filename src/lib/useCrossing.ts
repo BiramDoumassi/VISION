@@ -5,15 +5,21 @@ import { computeCrossing, simulateFailure } from "./crossing";
 import { useVision } from "@/store/useVision";
 import type { Txt } from "@/data/demo";
 
+export function useDataset() {
+  return useVision((s) => s.dataset);
+}
+
 export function useCrossing() {
   const radiusKm = useVision((s) => s.radiusKm);
-  return useMemo(() => computeCrossing(radiusKm), [radiusKm]);
+  const ds = useDataset();
+  return useMemo(() => computeCrossing(ds, radiusKm), [ds, radiusKm]);
 }
 
 export function useSimulation() {
   const id = useVision((s) => s.simulatingId);
+  const ds = useDataset();
   const { status } = useCrossing();
-  return useMemo(() => (id ? simulateFailure(id, status) : null), [id, status]);
+  return useMemo(() => (id ? simulateFailure(ds, id, status) : null), [ds, id, status]);
 }
 
 export function useTx() {

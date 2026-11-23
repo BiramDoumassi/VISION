@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MLMap, GeoJSONSource, MapLayerMouseEvent, StyleSpecification } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
-import {
-  flows, restrictions, sites, straits, suppliers, worldEvents, entityById, nodeById,
-} from "@/data/demo";
+import { restrictions, straits, worldEvents, entityById, nodeById } from "@/data/demo";
 import { flowPath } from "@/lib/crossing";
-import { useCrossing, useSimulation, useTx, STATUS_HEX } from "@/lib/useCrossing";
+import { useCrossing, useDataset, useSimulation, useTx, STATUS_HEX } from "@/lib/useCrossing";
 import { useVision, type LayerId } from "@/store/useVision";
 
 export const mapHandle: { current: MLMap | null } = { current: null };
@@ -39,6 +37,7 @@ export function Globe() {
   const ref = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [hover, setHover] = useState<{ x: number; y: number; id: string } | null>(null);
+  const ds = useDataset();
   const crossing = useCrossing();
   const sim = useSimulation();
   const tx = useTx();
@@ -149,20 +148,21 @@ export function Globe() {
     const map = mapHandle.current;
     if (!map || !map.getSource("sites")) return;
     const set = (id: string, data: FeatureCollection) => (map.getSource(id) as GeoJSONSource).setData(data);
+    const { sites, suppliers, flows } = ds;
     const impacted = new Set(sim?.impactedSites ?? []);
     set("sites", fc(sites.map((s) => pt(s.id, s.coord, { impacted: impacted.has(s.id) }))));
     set("suppliers", fc(suppliers.map((s) => pt(s.id, s.coord, { rank: s.rank, status: crossing.status.get(s.id) ?? "nominal" }))));
     set("conflicts", fc(worldEvents.filter((e) => e.kind === "conflict").map((e) => pt(e.id, e.coord))));
     set("catastrophes", fc(worldEvents.filter((e) => e.kind === "catastrophe").map((e) => pt(e.id, e.coord))));
     set("straits", fc(straits.map((s) => pt(s.id, s.coord, { status: s.status }))));
-    set("alerts", fc(crossing.alerts.map((a) => pt(a.id, nodeById(a.entityId)!.coord, { status: a.status }))));
+    set("alerts", fc(crossing.alerts.map((a) => pt(a.id, nodeById(ds, a.entityId)!.coord, { status: a.status }))));
     const line = (id: string, coords: [number, number][], props: Record<string, unknown>) =>
       ({ type: "Feature" as const, id, properties: { id, ...props }, geometry: { type: "LineString" as const, coordinates: coords } });
-    set("flows", fc(flows.map((f) => line(f.id, flowPath(f), { mode: f.mode, status: crossing.flowStatus.get(f.id) ?? "nominal" }))));
+    set("flows", fc(flows.map((f) => line(f.id, flowPath(ds, f), { mode: f.mode, status: crossing.flowStatus.get(f.id) ?? "nominal" }))));
     const simIds = new Set(sim?.impactedFlows ?? []);
-    set("sim-flows", fc(flows.filter((f) => simIds.has(f.id)).map((f) => line(f.id, flowPath(f), {}))));
+    set("sim-flows", fc(flows.filter((f) => simIds.has(f.id)).map((f) => line(f.id, flowPath(ds, f), {}))));
   };
-  useEffect(pushData, [ready, crossing, sim]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(pushData, [ready, ds, crossing, sim]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Visibilité des couches
   useEffect(() => {
@@ -184,18 +184,30 @@ export function Globe() {
     const map = mapHandle.current;
     if (!ready || !map) return;
     for (const src of ["sites", "suppliers"]) {
-      for (const n of src === "sites" ? sites : suppliers) map.setFeatureState({ source: src, id: n.id }, { selected: n.id === selectedId });
+      for (const n of src === "sites" ? ds.sites : ds.suppliers) map.setFeatureState({ source: src, id: n.id }, { selected: n.id === selectedId });
     }
-  }, [ready, selectedId]);
+  }, [ready, ds, selectedId]);
+
+  // Cadrage automatique quand un nouveau jeu de données est chargé (import ou retour à la démo).
+  const lastDs = useRef(ds);
+  useEffect(() => {
+    const map = mapHandle.current;
+    if (!ready || !map || lastDs.current === ds) return;
+    lastDs.current = ds;
+    const pts = [...ds.sites, ...ds.suppliers].map((n) => n.coord);
+    if (pts.length === 0) return;
+    const lngs = pts.map((p) => p[0]), lats = pts.map((p) => p[1]);
+    map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: { top: 90, bottom: 60, left: 320, right: 400 }, maxZoom: 5, duration: 1400 });
+  }, [ready, ds]);
 
   useEffect(() => {
     const map = mapHandle.current;
     if (!ready || !map || !flyTarget) return;
-    const e = entityById(flyTarget.id);
+    const e = entityById(ds, flyTarget.id);
     if (e) map.flyTo({ center: e.coord, zoom: Math.max(map.getZoom(), 3.6), duration: 1600, essential: true });
   }, [ready, flyTarget]);
 
-  const hovered = hover ? entityById(hover.id) : null;
+  const hovered = hover ? entityById(ds, hover.id) : null;
   return (
     <div className="absolute inset-0" style={{ background: C.space }}>
       <div ref={ref} style={{ position: "absolute", inset: 0 }} aria-label="Globe" />

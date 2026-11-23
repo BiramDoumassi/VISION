@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { DEMO_DATASET, type Dataset } from "@/data/demo";
+import { api, apiEnabled, initBackend, type Me } from "@/lib/backend";
 
 export type Locale = "fr" | "en";
 export type ThemeMode = "signal" | "mono";
@@ -23,6 +24,9 @@ export type Incident = {
 };
 
 type State = {
+  backend: "loading" | "local" | "api";
+  me: Me | null;
+  syncError: string | null;
   dataset: Dataset;
   importOpen: boolean;
   locale: Locale;
@@ -50,10 +54,10 @@ type State = {
   simulate: (id: string | null) => void;
   openForm: (f: FormId | null) => void;
   setBriefOpen: (open: boolean) => void;
-  recordDecision: (d: Omit<Decision, "id" | "at">) => void;
-  recordOrder: (o: Omit<Order, "id" | "at">) => void;
-  recordIncident: (i: Omit<Incident, "id" | "at" | "status">) => void;
-  setDataset: (ds: Dataset) => void;
+  recordDecision: (d: Omit<Decision, "id" | "at">) => Promise<void>;
+  recordOrder: (o: Omit<Order, "id" | "at">) => Promise<void>;
+  recordIncident: (i: Omit<Incident, "id" | "at" | "status">) => Promise<void>;
+  setDataset: (ds: Dataset) => Promise<void>;
   openImport: (open: boolean) => void;
 };
 
@@ -65,7 +69,13 @@ const read = <T,>(key: string, fallback: T): T => {
 const write = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* stockage indisponible */ } };
 const newId = (prefix: string) => `${prefix}-${Date.now().toString(36).toUpperCase()}`;
 
+// En mode API, toute écriture passe d'abord par le serveur ; l'état local n'est mis à jour qu'après succès.
+const fail = (e: unknown) => useVision.setState({ syncError: e instanceof Error ? e.message : String(e) });
+
 export const useVision = create<State>((set, get) => ({
+  backend: "loading",
+  me: null,
+  syncError: null,
   dataset: DEMO_DATASET,
   importOpen: false,
   locale: "fr",
@@ -103,41 +113,87 @@ export const useVision = create<State>((set, get) => ({
   simulate: (simulatingId) => set({ simulatingId }),
   openForm: (form) => set({ form }),
   setBriefOpen: (briefOpen) => set({ briefOpen }),
-  recordDecision: (d) => {
+  recordDecision: async (d) => {
+    if (apiEnabled()) {
+      try { const r = await api<Decision>("POST", "/decisions", d); set({ ledger: [r, ...get().ledger], form: null, syncError: null }); } catch (e) { fail(e); }
+      return;
+    }
     const ledger = [{ ...d, id: newId("DL"), at: new Date().toISOString() }, ...get().ledger];
     write("vision.ledger", ledger);
     set({ ledger, form: null });
   },
   // Une commande est une demande envoyée au fournisseur (catalogue uniquement, aucun paiement),
   // tracée aussi dans le Decision Ledger.
-  recordOrder: (o) => {
+  recordOrder: async (o) => {
+    if (apiEnabled()) {
+      try {
+        const r = await api<Order>("POST", "/orders", o);
+        const ledger = await api<Decision[]>("GET", "/decisions");
+        set({ orders: [r, ...get().orders], ledger, form: null, syncError: null });
+      } catch (e) { fail(e); }
+      return;
+    }
     const at = new Date().toISOString();
     const orders = [{ ...o, id: newId("CMD"), at }, ...get().orders];
     const ledger = [{ id: newId("DL"), at, entityId: o.entityId, decision: `Demande de commande à ${o.vendorName}${o.quantity ? ` (${o.quantity})` : ""}`, reason: o.note, rejected: "", owner: o.owner }, ...get().ledger];
     write("vision.orders", orders); write("vision.ledger", ledger);
     set({ orders, ledger, form: null });
   },
-  recordIncident: (i) => {
+  recordIncident: async (i) => {
+    if (apiEnabled()) {
+      try { const r = await api<Incident>("POST", "/incidents", i); set({ incidents: [r, ...get().incidents], form: null, syncError: null }); } catch (e) { fail(e); }
+      return;
+    }
     const incidents = [{ ...i, id: newId("INC"), at: new Date().toISOString(), status: "open" as const }, ...get().incidents];
     write("vision.incidents", incidents);
     set({ incidents, form: null });
   },
-  // Les données importées restent sur le poste (stockage du navigateur), jamais envoyées sur le réseau.
-  setDataset: (dataset) => {
-    if (dataset.source === "import") write("vision.dataset", dataset);
+  // Mode local : les données importées restent sur le poste. Mode API : elles sont enregistrées pour l'organisation.
+  setDataset: async (dataset) => {
+    if (apiEnabled()) {
+      try {
+        await api("PUT", "/dataset", { source: dataset.source, clientName: dataset.clientName, fileName: dataset.fileName, sites: dataset.sites, suppliers: dataset.suppliers, flows: dataset.flows });
+      } catch (e) { fail(e); return; }
+    } else if (dataset.source === "import") write("vision.dataset", dataset);
     else { try { localStorage.removeItem("vision.dataset"); } catch { /* stockage indisponible */ } }
-    set({ dataset, selectedId: null, simulatingId: null, form: null, importOpen: false });
+    set({ dataset, selectedId: null, simulatingId: null, form: null, importOpen: false, syncError: null });
   },
   openImport: (importOpen) => set({ importOpen }),
 }));
 
-export function hydrateFromStorage() {
+export async function hydrateFromStorage() {
   useVision.setState({
     locale: read<Locale>("vision.locale", "fr"),
     theme: read<ThemeMode>("vision.theme", "signal"),
+  });
+  try {
+    const b = await initBackend();
+    if (b.mode === "api") {
+      const [ds, ledger, orders, incidents] = await Promise.all([
+        api<Dataset | null>("GET", "/dataset"),
+        api<Decision[]>("GET", "/decisions"),
+        api<Order[]>("GET", "/orders"),
+        api<Incident[]>("GET", "/incidents?status=open"),
+      ]);
+      useVision.setState({ backend: "api", me: b.me, dataset: ds ?? DEMO_DATASET, ledger, orders, incidents });
+      return;
+    }
+  } catch (e) {
+    useVision.setState({ backend: "local", syncError: e instanceof Error ? e.message : String(e) });
+    return;
+  }
+  useVision.setState({
+    backend: "local",
     ledger: read<Decision[]>("vision.ledger", []),
     orders: read<Order[]>("vision.orders", []),
     incidents: read<Incident[]>("vision.incidents", []),
     dataset: read<Dataset>("vision.dataset", DEMO_DATASET),
   });
 }
+
+// Droits d'action selon les rôles Keycloak (en mode local, tout est permis).
+export const can = (me: Me | null, action: "decide" | "analyze" | "admin") => {
+  if (!me) return true;
+  if (me.roles.includes("admin")) return true;
+  return action === "decide" ? me.roles.includes("decider") : action === "analyze" ? me.roles.includes("analyst") || me.roles.includes("decider") : false;
+};

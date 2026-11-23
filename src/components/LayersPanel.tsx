@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useVision, type LayerId } from "@/store/useVision";
+import { can, useVision, type LayerId } from "@/store/useVision";
 import { DEMO_DATASET, SUBTYPES } from "@/data/demo";
 import { useTx } from "@/lib/useCrossing";
 import { IconChevron } from "./icons";
@@ -27,7 +27,8 @@ export function LayersPanel() {
   const t = useTranslations("layers");
   const ti = useTranslations("import");
   const tx = useTx();
-  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub } = useVision();
+  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub, me } = useVision();
+  const mayImport = can(me, "analyze");
   const [open, setOpen] = useState<string | null>(null);
 
   const row = (id: LayerId) => {
@@ -73,9 +74,9 @@ export function LayersPanel() {
             <div className="truncate text-[12px] text-ink">{dataset.clientName}</div>
             <div className="num text-[11px] text-muted">{dataset.sites.length} {ti("sites").toLowerCase()} · {dataset.suppliers.length} {ti("suppliers").toLowerCase()}</div>
           </div>
-          <button onClick={() => openImport(true)} className="shrink-0 rounded border px-2.5 py-1 text-[12px] font-medium text-signal" style={{ borderColor: "color-mix(in srgb, var(--vision-signal) 40%, transparent)" }}>{ti("import")}</button>
+          {mayImport && <button onClick={() => openImport(true)} className="shrink-0 rounded border px-2.5 py-1 text-[12px] font-medium text-signal" style={{ borderColor: "color-mix(in srgb, var(--vision-signal) 40%, transparent)" }}>{ti("import")}</button>}
         </div>
-        {dataset.source === "import" && (
+        {dataset.source === "import" && mayImport && (
           <button onClick={() => setDataset(DEMO_DATASET)} className="mt-1.5 text-[11px] text-muted hover:text-ink hover:underline">{ti("backToDemo")}</button>
         )}
       </div>

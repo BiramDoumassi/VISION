@@ -1,0 +1,68 @@
+# VISION — déploiement sur site (un serveur ou un portable isolé).
+# Démarrage : depuis la racine du dépôt, `docker compose -f deploy/docker-compose.yml up -d --build`
+# Interface : http://localhost:8081   ·   Keycloak : http://localhost:8080   ·   API : http://localhost:4000
+# À changer avant toute installation réelle : les mots de passe ci-dessous et ceux des comptes de démo du realm.
+name: vision
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vision
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PG_ADMIN_PASSWORD:-change-moi-admin}
+      PG_APP_PASSWORD: ${PG_APP_PASSWORD:-change-moi-app}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vision"]
+      interval: 5s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-change-moi-keycloak}
+      KC_HOSTNAME: http://localhost:8080
+    volumes:
+      - ./keycloak/vision-realm.json:/opt/keycloak/data/import/vision-realm.json:ro
+    ports:
+      - "8080:8080"
+
+  api:
+    build: { context: ../server }
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+      keycloak: { condition: service_started }
+    environment:
+      NODE_ENV: production
+      AUTH_MODE: keycloak
+      # L'émetteur doit être exactement celui des jetons (adresse vue par le navigateur) ;
+      # les clés publiques sont lues à l'intérieur du réseau Docker.
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/vision
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/vision/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: vision-api
+      DATABASE_URL: postgres://vision_app:${PG_APP_PASSWORD:-change-moi-app}@db:5432/vision
+      DATABASE_ADMIN_URL: postgres://postgres:${PG_ADMIN_PASSWORD:-change-moi-admin}@db:5432/vision
+      VISION_ORGS: "demo:Démonstration"
+      CORS_ORIGINS: http://localhost:8081
+    ports:
+      - "4000:4000"
+
+  web:
+    build: { context: .., dockerfile: deploy/web.Dockerfile }
+    restart: unless-stopped
+    depends_on: [api]
+    volumes:
+      - ./web-config.json:/usr/share/nginx/html/config.json:ro
+    ports:
+      - "8081:80"
+
+volumes:
+  pgdata:

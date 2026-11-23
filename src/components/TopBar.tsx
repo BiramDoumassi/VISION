@@ -5,6 +5,7 @@ import { worldEvents, straits, infra, satellites } from "@/data/demo";
 import { allCountries } from "@/lib/countries";
 import { useCrossing, useDataset, useTx } from "@/lib/useCrossing";
 import { useVision } from "@/store/useVision";
+import { logout } from "@/lib/backend";
 import { IconBell, IconSearch, VisionMark } from "./icons";
 
 export function TopBar() {
@@ -13,7 +14,7 @@ export function TopBar() {
   const { alerts } = useCrossing();
   const ds = useDataset();
   const { sites, suppliers } = ds;
-  const { locale, setLocale, theme, setTheme, select } = useVision();
+  const { locale, setLocale, theme, setTheme, select, me, backend, syncError } = useVision();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
@@ -99,7 +100,11 @@ export function TopBar() {
             </span>
           )}
         </button>
-        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-[11px] font-semibold text-muted">CI</div>
+        {syncError && <span className="max-w-[220px] truncate text-[11px]" style={{ color: "var(--vision-alert)" }} title={syncError}>⚠ {syncError}</span>}
+        <button onClick={() => backend === "api" && logout()} title={me ? `${me.name} · ${me.org} · ${me.roles.join(", ")}` : undefined}
+          className="flex h-7 w-7 items-center justify-center rounded-full border border-line text-[11px] font-semibold text-muted">
+          {(me?.name ?? "VI").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+        </button>
       </div>
     </header>
   );

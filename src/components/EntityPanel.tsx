@@ -11,7 +11,7 @@ import {
 import { distanceKm, simulateFailure, straitClosed, type Status } from "@/lib/crossing";
 import { entityLabel, useAt, useCrossing, useDataset, useSimulation, useTx, STATUS_HEX, STATUS_VAR } from "@/lib/useCrossing";
 import { openBrief } from "@/lib/brief";
-import { useVision } from "@/store/useVision";
+import { can, useVision } from "@/store/useVision";
 import { IconBell, IconBox, IconBolt, IconClose, IconFactory, IconPlay, IconStamp, IconTarget, IconWave } from "./icons";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -246,7 +246,8 @@ export function EntityPanel() {
   const t = useTranslations();
   const tu = useTranslations("units");
   const tx = useTx();
-  const { selectedId, select, simulatingId, simulate, form, openForm, ledger, orders, incidents, locale, radiusKm } = useVision();
+  const { selectedId, select, simulatingId, simulate, form, openForm, ledger, orders, incidents, locale, radiusKm, me } = useVision();
+  const mayDecide = can(me, "decide"), mayAnalyze = can(me, "analyze");
   const { status, reasons } = useCrossing();
   const ds = useDataset();
   const at = useAt();
@@ -463,12 +464,12 @@ export function EntityPanel() {
         {isNode && (
           <div className="flex gap-2">
             {sup && btn(t("action.simulate"), <IconPlay size={13} />, () => simulate(simulatingId === sup.id ? null : sup.id), simulatingId === sup.id)}
-            {btn(t("action.decide"), <IconStamp size={13} />, () => openForm(form === "decide" ? null : "decide"), form === "decide")}
-            {sup && btn(t("action.order"), <IconBox size={13} />, () => openForm(form === "order" ? null : "order"), form === "order")}
+            {mayDecide && btn(t("action.decide"), <IconStamp size={13} />, () => openForm(form === "decide" ? null : "decide"), form === "decide")}
+            {sup && mayDecide && btn(t("action.order"), <IconBox size={13} />, () => openForm(form === "order" ? null : "order"), form === "order")}
           </div>
         )}
         <div className="flex gap-2">
-          {isNode && btn(t("action.incident"), <IconBell size={13} />, () => openForm(form === "incident" ? null : "incident"), form === "incident")}
+          {isNode && mayAnalyze && btn(t("action.incident"), <IconBell size={13} />, () => openForm(form === "incident" ? null : "incident"), form === "incident")}
           {btn(t("action.brief"), <IconWave size={13} />, brief)}
         </div>
       </footer>

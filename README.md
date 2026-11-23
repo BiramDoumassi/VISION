@@ -15,6 +15,40 @@ npm start          # sert out/ en local
 
 Node 20 ou plus. Aucun appel réseau à l'exécution : polices, fond de carte et données sont servis par l'application elle-même (compatible on-premise et DDIL).
 
+## Deux modes de fonctionnement
+
+Le mode est lu au démarrage dans `public/config.json` (fichier statique, modifiable à l'installation sans recompiler).
+
+| Mode | `config.json` | Données | Identité |
+| --- | --- | --- | --- |
+| Local (démo, poste isolé) | `{}` | Navigateur | Aucune |
+| Serveur | `{"apiUrl": "...", "oidc": {"authority": ".../realms/vision", "clientId": "vision-web"}}` | API NestJS + PostgreSQL | Keycloak (OIDC + PKCE) |
+
+### Serveur (lot B)
+
+- `server/` : API NestJS, seul point de vérification du Trust Fabric. Vérifie le jeton Keycloak (signature, émetteur, audience `vision-api`, expiration), lit l'organisation (`org`) et les rôles (`viewer`, `analyst`, `decider`, `admin`).
+- PostgreSQL avec Row-Level Security : chaque requête fixe `app.org_id` ; une organisation ne voit jamais les données d'une autre. Le rôle applicatif `vision_app` ne peut rien supprimer : Decision Ledger et journal d'audit en ajout seul.
+- Routes : `GET /health`, `GET /api/me`, `GET|PUT /api/dataset`, `GET|POST /api/decisions`, `GET|POST /api/orders`, `GET|POST /api/incidents`, `PATCH /api/incidents/:id/close`, `GET /api/audit` (admin). Toute écriture est journalisée.
+- Droits dans l'interface : Décider et Commander exigent `decider` ; Importer et Incident exigent `analyst` ou `decider`.
+- Développement sans Keycloak : `AUTH_MODE=dev` (refusé si `NODE_ENV=production`).
+
+```bash
+cd server && npm install && npm run build
+AUTH_MODE=dev DATABASE_URL=postgres://vision_app@localhost:5432/vision \
+  DATABASE_ADMIN_URL=postgres://postgres@localhost:5432/vision node dist/main.js
+```
+
+### Déploiement sur site
+
+`deploy/docker-compose.yml` lance PostgreSQL, Keycloak (realm `vision` importé depuis `deploy/keycloak/vision-realm.json`), l'API et l'interface (nginx).
+
+```bash
+PG_ADMIN_PASSWORD=... PG_APP_PASSWORD=... KC_ADMIN_PASSWORD=... \
+  docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+Interface sur http://localhost:8081. Les deux comptes de démonstration du realm ont un mot de passe temporaire à changer à la première connexion. Pour une installation réelle : remplacer `localhost` par le nom du serveur dans le realm, `deploy/web-config.json` et le compose, passer Keycloak en `start` avec TLS.
+
 ## Stack
 
 | Rôle | Choix |
@@ -66,7 +100,7 @@ Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré
 ## Limites connues (à traiter ensuite)
 
 - Les couches Monde restent des événements de démonstration (lot C : ingestion des vraies sources côté serveur).
-- Decision Ledger, commandes et incidents sont stockés dans le navigateur (lot B : NestJS, PostgreSQL, Keycloak).
+- Le déploiement Docker et le realm Keycloak n'ont pas pu être lancés dans l'environnement de développement (images inaccessibles) : à valider au premier `docker compose up`. L'API, PostgreSQL/RLS et la vérification des jetons OIDC ont été testés.
 - La barre de recherche n'est pas encore la barre VISION AI en langage naturel (lot D).
 - Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.
 - Le Decision Ledger est stocké dans le navigateur : à remplacer par l'API NestJS + PostgreSQL (RLS) + Keycloak.

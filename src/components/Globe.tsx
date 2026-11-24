@@ -1,5 +1,6 @@
 "use client";
 // Globe VISION — MapLibre GL JS, projection globe/mercator, fond de carte servi localement (aucune tuile externe).
+// Fonds : imagerie satellite NASA de nuit ou de jour (tuiles générées au build par scripts/build-imagery.mjs), ou vecteur seul.
 import { useEffect, useRef, useState } from "react";
 import type { Map as MLMap, GeoJSONSource, MapMouseEvent, StyleSpecification, ExpressionSpecification } from "maplibre-gl";
 import type { FeatureCollection, Position } from "geojson";
@@ -8,7 +9,7 @@ import {
 } from "@/data/demo";
 import { flowPath, straitClosed } from "@/lib/crossing";
 import { entityLabel, useAt, useCrossing, useDataset, useSimulation, useTx, STATUS_HEX } from "@/lib/useCrossing";
-import { useVision, type LayerId } from "@/store/useVision";
+import { useVision, type Basemap, type LayerId } from "@/store/useVision";
 
 export const mapHandle: { current: MLMap | null } = { current: null };
 export const HOME = { center: [22, 32] as [number, number], zoom: 1.7 };
@@ -33,6 +34,18 @@ const LAYER_MAP: Record<LayerId, string[]> = {
   flows: ["flows", "flows-sim"],
   alerts: ["alerts-ring"],
 };
+// Apparence du fond selon le mode : l'aplat « land » reste présent (transparent) pour le clic pays.
+const BASEMAP: Record<Basemap, { night: boolean; day: boolean; land: number; border: string }> = {
+  night: { night: true, day: false, land: 0, border: "rgba(228,231,235,0.16)" },
+  day: { night: false, day: true, land: 0, border: "rgba(255,255,255,0.32)" },
+  vector: { night: false, day: false, land: 1, border: "#2A303A" },
+};
+const imagery = (name: "night" | "day") => ({
+  type: "raster" as const, tileSize: 256, minzoom: 0, maxzoom: 4,
+  tiles: [`${window.location.origin}/data/imagery/${name}/{z}/{x}/{y}.jpg`],
+  attribution: "NASA Blue Marble · Black Marble",
+});
+
 const INTERACTIVE = ["sites", "suppliers", "conflicts-dot", "catastrophes-dot", "straits", "infra", "satellites", "airspace-fill"];
 const SUB_LAYERS = ["conflicts-halo", "conflicts-dot", "catastrophes-halo", "catastrophes-dot", "infra", "satellites"];
 
@@ -70,6 +83,7 @@ export function Globe() {
   const selectedId = useVision((s) => s.selectedId);
   const worldVersion = useVision((s) => s.worldVersion);
   const aiIds = useVision((s) => s.ai?.result?.entityIds ?? null);
+  const basemap = useVision((s) => s.basemap);
 
   // Création de la carte
   useEffect(() => {
@@ -78,14 +92,22 @@ export function Globe() {
     (async () => {
       const maplibregl = (await import("maplibre-gl")).default;
       if (disposed || !ref.current) return;
+      const b = BASEMAP[useVision.getState().basemap];
+      const vis = (on: boolean) => ({ visibility: on ? ("visible" as const) : ("none" as const) });
       const style: StyleSpecification = {
         version: 8,
         projection: { type: "globe" },
-        sources: { world: { type: "geojson", data: "/data/world.geojson", attribution: "Natural Earth" } },
+        sources: {
+          world: { type: "geojson", data: "/data/world.geojson", attribution: "Natural Earth" },
+          "imagery-night": imagery("night"),
+          "imagery-day": imagery("day"),
+        },
         layers: [
           { id: "ocean", type: "background", paint: { "background-color": C.ocean } },
-          { id: "land", type: "fill", source: "world", paint: { "fill-color": C.land } },
-          { id: "borders", type: "line", source: "world", paint: { "line-color": C.border, "line-width": 0.6 } },
+          { id: "imagery-night", type: "raster", source: "imagery-night", layout: vis(b.night), paint: { "raster-fade-duration": 0 } },
+          { id: "imagery-day", type: "raster", source: "imagery-day", layout: vis(b.day), paint: { "raster-fade-duration": 0, "raster-saturation": -0.25, "raster-brightness-max": 0.85 } },
+          { id: "land", type: "fill", source: "world", paint: { "fill-color": C.land, "fill-opacity": b.land } },
+          { id: "borders", type: "line", source: "world", paint: { "line-color": b.border, "line-width": 0.6 } },
         ],
       };
       map = new maplibregl.Map({ container: ref.current, style, center: HOME.center, zoom: HOME.zoom, attributionControl: { compact: true }, maxPitch: 0 });
@@ -235,6 +257,17 @@ export function Globe() {
     }
     for (const id of SUB_LAYERS) map.setFilter(id, ["!", ["in", ["get", "sub"], ["literal", hiddenSubs]]]);
   }, [ready, layers, hiddenSubs]);
+
+  // Fond de carte : nuit, jour ou vecteur
+  useEffect(() => {
+    const map = mapHandle.current;
+    if (!ready || !map) return;
+    const b = BASEMAP[basemap];
+    map.setLayoutProperty("imagery-night", "visibility", b.night ? "visible" : "none");
+    map.setLayoutProperty("imagery-day", "visibility", b.day ? "visible" : "none");
+    map.setPaintProperty("land", "fill-opacity", b.land);
+    map.setPaintProperty("borders", "line-color", b.border);
+  }, [ready, basemap]);
 
   // Projection 2D / 3D
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { can, useVision, type LayerId } from "@/store/useVision";
+import { can, useVision, type Basemap, type LayerId } from "@/store/useVision";
 import { DEMO_DATASET, SUBTYPES } from "@/data/demo";
 import { useTx } from "@/lib/useCrossing";
 import { IconChevron } from "./icons";
@@ -27,7 +27,7 @@ export function LayersPanel() {
   const t = useTranslations("layers");
   const ti = useTranslations("import");
   const tx = useTx();
-  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub, me, worldSources, locale } = useVision();
+  const { layers, toggleLayer, radiusKm, dataset, openImport, setDataset, hiddenSubs, toggleSub, me, worldSources, locale, basemap, setBasemap } = useVision();
   const ago = (iso: string) => { const h = Math.round((Date.now() - Date.parse(iso)) / 3_600_000); return h < 1 ? (locale === "fr" ? "< 1 h" : "< 1 h") : `${h} h`; };
   const mayImport = can(me, "analyze");
   const [open, setOpen] = useState<string | null>(null);
@@ -98,6 +98,15 @@ export function LayersPanel() {
         <div className="mb-3">{WORLD.map(row)}</div>
       </div>
       <div className="border-t border-line px-1 pt-3">
+        <div className="label mb-1.5">{t("basemap")}</div>
+        <div className="mb-3 flex gap-1" role="radiogroup" aria-label={t("basemap")}>
+          {(["night", "day", "vector"] as Basemap[]).map((b) => (
+            <button key={b} role="radio" aria-checked={basemap === b} onClick={() => setBasemap(b)}
+              className={`flex-1 rounded border px-2 py-1 text-[11px] ${basemap === b ? "border-signal text-signal" : "border-line text-muted hover:text-ink"}`}>
+              {t(b === "night" ? "basemapNight" : b === "day" ? "basemapDay" : "basemapVector")}
+            </button>
+          ))}
+        </div>
         <div className="mb-1.5 flex items-center justify-between">
           <span className="label">{t("radius")}</span>
           <span className="num text-[12px]">{radiusKm} km</span>

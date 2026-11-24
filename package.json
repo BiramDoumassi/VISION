@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "npx serve out",
     "typecheck": "tsc --noEmit",
-    "refdata": "node scripts/build-world.mjs && node scripts/build-refdata.mjs"
+    "refdata": "node scripts/build-world.mjs && node scripts/build-refdata.mjs && node scripts/build-imagery.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.0",
@@ -33,6 +33,7 @@
     "@types/react-dom": "^19.2.0",
     "all-the-cities": "^3.1.0",
     "i18n-iso-countries": "^7.14.0",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4.1.0",
     "topojson-client": "^3.1.0",
     "typescript": "^5.7.0",

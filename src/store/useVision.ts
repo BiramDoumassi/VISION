@@ -8,6 +8,7 @@ import type { AskResult } from "@/lib/ask";
 
 export type Locale = "fr" | "en";
 export type ThemeMode = "signal" | "mono";
+export type Basemap = "night" | "day" | "vector";
 export type LayerId =
   | "conflicts" | "restrictions" | "catastrophes" | "maritime" | "air" | "infra" | "space" | "countryRisk"
   | "sites" | "suppliers" | "flows" | "alerts";
@@ -45,6 +46,7 @@ type State = {
   locale: Locale;
   theme: ThemeMode;
   projection: "globe" | "mercator";
+  basemap: Basemap;
   layers: Record<LayerId, boolean>;
   hiddenSubs: string[];
   radiusKm: number;
@@ -60,6 +62,7 @@ type State = {
   setLocale: (l: Locale) => void;
   setTheme: (t: ThemeMode) => void;
   setProjection: (p: "globe" | "mercator") => void;
+  setBasemap: (b: Basemap) => void;
   toggleLayer: (id: LayerId) => void;
   toggleSub: (id: string) => void;
   setDayOffset: (n: number) => void;
@@ -104,6 +107,7 @@ export const useVision = create<State>((set, get) => ({
   locale: "fr",
   theme: "signal",
   projection: "globe",
+  basemap: "night",
   layers: {
     conflicts: true, restrictions: true, catastrophes: true, maritime: true,
     air: true, infra: true, space: false, countryRisk: false,
@@ -123,6 +127,7 @@ export const useVision = create<State>((set, get) => ({
   setLocale: (locale) => { write("vision.locale", locale); set({ locale }); },
   setTheme: (theme) => { write("vision.theme", theme); set({ theme }); },
   setProjection: (projection) => set({ projection }),
+  setBasemap: (basemap) => { write("vision.basemap", basemap); set({ basemap }); },
   toggleLayer: (id) => set({ layers: { ...get().layers, [id]: !get().layers[id] } }),
   toggleSub: (id) => {
     const h = get().hiddenSubs;
@@ -189,6 +194,7 @@ export async function hydrateFromStorage() {
     locale: read<Locale>("vision.locale", "fr"),
     theme: read<ThemeMode>("vision.theme", "signal"),
     pack: read<PackId>("vision.pack", "aero"),
+    basemap: read<Basemap>("vision.basemap", "night"),
   });
   try {
     const b = await initBackend();

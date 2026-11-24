@@ -27,7 +27,11 @@
     "space": "Spatial",
     "countryRisk": "Risque pays",
     "subs": "Sous-filtres",
-    "sources": "Sources"
+    "sources": "Sources",
+    "basemap": "Fond de carte",
+    "basemapNight": "Nuit",
+    "basemapDay": "Jour",
+    "basemapVector": "Vecteur"
   },
   "legend": {
     "title": "Légende",

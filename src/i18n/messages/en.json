@@ -27,7 +27,11 @@
     "space": "Space",
     "countryRisk": "Country risk",
     "subs": "Sub-filters",
-    "sources": "Sources"
+    "sources": "Sources",
+    "basemap": "Basemap",
+    "basemapNight": "Night",
+    "basemapDay": "Day",
+    "basemapVector": "Vector"
   },
   "legend": {
     "title": "Legend",

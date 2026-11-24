@@ -75,13 +75,23 @@ PG_ADMIN_PASSWORD=... PG_APP_PASSWORD=... KC_ADMIN_PASSWORD=... \
 
 Interface sur http://localhost:8081. Les deux comptes de démonstration du realm ont un mot de passe temporaire à changer à la première connexion. Pour une installation réelle : remplacer `localhost` par le nom du serveur dans le realm, `deploy/web-config.json` et le compose, passer Keycloak en `start` avec TLS.
 
+## Fonds de carte
+
+Trois fonds, au choix dans le panneau Couches (**Fond de carte**) ; le choix est mémorisé par navigateur :
+
+- **Nuit** (par défaut) : relief assombri et lumières des villes, d'après NASA Blue Marble et Black Marble.
+- **Jour** : NASA Blue Marble.
+- **Vecteur** : contours Natural Earth seuls (le rendu d'origine).
+
+Les tuiles sont générées au build par `scripts/build-imagery.mjs` à partir de `scripts/imagery/` et servies par l'application : aucune requête externe, compatible DDIL. Provenance, licence et procédure pour monter en résolution : `scripts/imagery/SOURCES.md`.
+
 ## Stack
 
 | Rôle | Choix |
 | --- | --- |
 | Framework | Next.js, `output: "export"` (export statique partout) |
 | Style | Tailwind CSS 4, tokens VISION dans `src/app/globals.css` |
-| Carte | MapLibre GL JS, projection globe ↔ 2D, fond Natural Earth généré en local (`scripts/build-world.mjs`) |
+| Carte | MapLibre GL JS, projection globe ↔ 2D, fond Natural Earth généré en local (`scripts/build-world.mjs`), imagerie NASA en tuiles locales (`scripts/build-imagery.mjs`) |
 | i18n | next-intl côté client (FR/EN), messages dans `src/i18n/messages/` |
 | État | Zustand (`src/store/useVision.ts`) |
 | Polices | Inter, Inter Tight, IBM Plex Mono via @fontsource (auto-hébergées) |

@@ -6,7 +6,19 @@ import type { computeCrossing, Status } from "./crossing";
 type Crossing = ReturnType<typeof computeCrossing>;
 export type AskResult = { mode: "model" | "rules"; answer: string; entityIds: string[]; model?: string };
 
+const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+type Item = { id: string; label: string; detail?: string };
+const fit = (xs: Item[], n: number) => xs.slice(0, n).map((x) => ({ id: x.id, label: cut(x.label, 200), detail: x.detail === undefined ? undefined : cut(x.detail, 400) }));
+
 export function buildContext(ds: Dataset, crossing: Crossing, at: string, tx: (t: Txt) => string) {
+  const raw = rawContext(ds, crossing, at, tx);
+  return {
+    client: cut(raw.client, 200), date: raw.date,
+    alerts: fit(raw.alerts, 200), suppliers: fit(raw.suppliers, 2000), sites: fit(raw.sites, 500), events: fit(raw.events, 500),
+  };
+}
+
+function rawContext(ds: Dataset, crossing: Crossing, at: string, tx: (t: Txt) => string) {
   const st = (id: string) => crossing.status.get(id) ?? "nominal";
   return {
     client: ds.clientName,
@@ -19,7 +31,7 @@ export function buildContext(ds: Dataset, crossing: Crossing, at: string, tx: (t
       ...restrictions.filter((r) => isActive(r, at)).map((r) => ({ id: r.id, label: tx(r.title), detail: `${r.source}, pays ${r.countryIso}` })),
       ...straits.filter((s) => s.closedSince && s.closedSince <= at).map((s) => ({ id: s.id, label: `${s.name} fermé`, detail: s.source })),
       ...airspaces.filter((a) => isActive(a, at)).map((a) => ({ id: a.id, label: tx(a.name), detail: a.source })),
-    ].slice(0, 500),
+    ],
   };
 }
 

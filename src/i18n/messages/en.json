@@ -255,7 +255,8 @@
     "close": "Close",
     "thinking": "Analysing…",
     "fallback": "Model unavailable ({error}): rule-based answer.",
-    "advisory": "Suggested by VISION AI, to be checked. No action is executed."
+    "advisory": "Suggested by VISION AI, to be checked. No action is executed.",
+    "rulesFallback": "VISION AI · rules (model unavailable)"
   },
   "settings": {
     "title": "Settings",

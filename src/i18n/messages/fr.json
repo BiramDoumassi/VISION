@@ -255,7 +255,8 @@
     "close": "Fermer",
     "thinking": "Analyse en cours…",
     "fallback": "Modèle indisponible ({error}) : réponse calculée par règles.",
-    "advisory": "Proposé par VISION AI, à vérifier. Aucune action n'est exécutée."
+    "advisory": "Proposé par VISION AI, à vérifier. Aucune action n'est exécutée.",
+    "rulesFallback": "VISION AI · règles (modèle indisponible)"
   },
   "settings": {
     "title": "Réglages",

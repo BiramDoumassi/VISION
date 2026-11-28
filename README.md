@@ -68,12 +68,24 @@ L'API alimente les couches Monde depuis des sources publiques, toutes les 30 min
 
 `deploy/docker-compose.yml` lance PostgreSQL, Keycloak (realm `vision` importé depuis `deploy/keycloak/vision-realm.json`), l'API et l'interface (nginx).
 
+Les mots de passe et les réglages se mettent une fois pour toutes dans `deploy/.env` (modèle : `deploy/.env.example` ; ce fichier n'est jamais versionné) :
+
 ```bash
-PG_ADMIN_PASSWORD=... PG_APP_PASSWORD=... KC_ADMIN_PASSWORD=... \
-  docker compose -f deploy/docker-compose.yml up -d --build
+cp deploy/.env.example deploy/.env      # puis remplir les mots de passe
+docker compose -f deploy/docker-compose.yml up -d --build
 ```
 
 Interface sur http://localhost:8081. Les deux comptes de démonstration du realm ont un mot de passe temporaire à changer à la première connexion. Pour une installation réelle : remplacer `localhost` par le nom du serveur dans le realm, `deploy/web-config.json` et le compose, passer Keycloak en `start` avec TLS.
+
+### VISION AI avec Ollama
+
+Le modèle tourne **hors de Docker**, directement sur la machine : Docker Desktop sur Mac n'a pas accès à la carte graphique. L'API le joint par `host.docker.internal`.
+
+1. Installer Ollama (ollama.com), puis récupérer un modèle Mistral : `ollama pull ministral-3:3b` (machine modeste, sans carte graphique), `ministral-3:8b` (16 Go) ou `mistral-small` (32 Go et plus).
+2. Dans `deploy/.env` : `AI_BASE_URL=http://host.docker.internal:11434` et `AI_MODEL=` le nom du modèle.
+3. `docker compose -f deploy/docker-compose.yml up -d` : l'API redémarre avec le modèle ; la barre VISION AI l'indique.
+
+Si le modèle ne répond pas dans le délai (`AI_TIMEOUT_MS`, 3 minutes par défaut), la barre bascule sur le moteur de règles et le signale.
 
 ## Fonds de carte
 
@@ -136,7 +148,7 @@ Le modèle est servi par l'application : `/modele-import-vision.xlsx` (généré
 ## Limites connues (à traiter ensuite)
 
 - En mode local (sans serveur), les couches Monde restent des événements de démonstration.
-- Le déploiement Docker et le realm Keycloak n'ont pas pu être lancés dans l'environnement de développement (images inaccessibles) : à valider au premier `docker compose up`. L'API, PostgreSQL/RLS et la vérification des jetons OIDC ont été testés.
+- Déploiement Docker validé sur Mac (Docker Desktop) le 24 nov. 2026 : quatre conteneurs, connexion Keycloak, données Monde réelles (USGS, GDACS).
 - La barre VISION AI a été testée avec un faux serveur de modèle compatible ; le choix et le dimensionnement du modèle réel (et du GPU) restent à faire.
 - Pas de connecteur ERP direct (l'import passe par Excel/CSV). Les flux maritimes importés ne sont pas encore routés par les détroits.
 - Le Decision Ledger est stocké dans le navigateur : à remplacer par l'API NestJS + PostgreSQL (RLS) + Keycloak.

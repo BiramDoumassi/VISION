@@ -5,17 +5,20 @@ import { z } from "zod";
 
 export const aiConfigured = () => !!process.env.AI_BASE_URL;
 
-const item = z.object({ id: z.string().max(80), label: z.string().max(200), detail: z.string().max(400).optional() });
+// Les textes trop longs (titres d'événements réels) sont raccourcis, jamais refusés : une question ne doit pas échouer pour ça.
+const clip = (n: number) => z.string().max(20_000).transform((s) => (s.length > n ? `${s.slice(0, n - 1)}…` : s));
+const list = (n: number) => z.array(item).max(20_000).transform((a) => a.slice(0, n));
+const item = z.object({ id: z.string().max(80), label: clip(200), detail: clip(400).optional() });
 export const AskIn = z.object({
   question: z.string().min(2).max(500),
   locale: z.enum(["fr", "en"]),
   context: z.object({
-    client: z.string().max(200),
+    client: clip(200),
     date: z.string().max(20),
-    alerts: z.array(item).max(200),
-    suppliers: z.array(item).max(2000),
-    sites: z.array(item).max(500),
-    events: z.array(item).max(500),
+    alerts: list(200),
+    suppliers: list(2000),
+    sites: list(500),
+    events: list(500),
   }),
 });
 export type AskInput = z.infer<typeof AskIn>;

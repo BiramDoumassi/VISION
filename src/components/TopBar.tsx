@@ -141,7 +141,7 @@ function AiAnswer() {
   return (
     <div className="panel absolute left-0 right-0 top-9 z-40 px-3 py-2.5">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="label">{ai.result?.mode === "model" ? t("model", { model: ai.result.model ?? aiModel ?? "" }) : t("rules")}</span>
+        <span className="label">{ai.result?.mode === "model" ? t("model", { model: ai.result.model ?? aiModel ?? "" }) : t(ai.error && aiModel ? "rulesFallback" : "rules")}</span>
         <button onClick={() => setAi(null)} className="text-[11px] text-muted hover:text-ink">{t("close")}</button>
       </div>
       <div className="mb-1 text-[11px] text-muted">« {ai.question} »</div>

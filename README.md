@@ -79,7 +79,9 @@ Interface sur http://localhost:8081. Les deux comptes de démonstration du realm
 
 ### VISION AI avec Ollama
 
-Le modèle tourne **hors de Docker**, directement sur la machine : Docker Desktop sur Mac n'a pas accès à la carte graphique. L'API le joint par `host.docker.internal`.
+**Machine Intel ou sans carte graphique** : Ollama tourne dans la stack (service `ollama`, profil `ai`), sans rien installer d'autre. Dans `deploy/.env` : `COMPOSE_PROFILES=ai`, `AI_BASE_URL=http://ollama:11434`, `AI_MODEL=ministral-3:3b` ; lancer la stack, puis une fois `docker compose -f deploy/docker-compose.yml exec ollama ollama pull ministral-3:3b`.
+
+**Mac Apple M** : le modèle tourne **hors de Docker**, directement sur la machine, car Docker Desktop sur Mac n'a pas accès à la puce graphique. L'API le joint par `host.docker.internal` :
 
 1. Installer Ollama (ollama.com), puis récupérer un modèle Mistral : `ollama pull ministral-3:3b` (machine modeste, sans carte graphique), `ministral-3:8b` (16 Go) ou `mistral-small` (32 Go et plus).
 2. Dans `deploy/.env` : `AI_BASE_URL=http://host.docker.internal:11434` et `AI_MODEL=` le nom du modèle.

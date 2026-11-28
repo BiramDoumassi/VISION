@@ -78,5 +78,15 @@ services:
     ports:
       - "8081:80"
 
+  # VISION AI sur la machine elle-même (optionnel) : activé par COMPOSE_PROFILES=ai dans deploy/.env.
+  # Sur processeur seul (Intel, serveur sans carte graphique). Sur Mac Apple M, préférer Ollama installé hors Docker.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+
 volumes:
   pgdata:
+  ollama:
